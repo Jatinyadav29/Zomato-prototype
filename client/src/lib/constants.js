@@ -24,8 +24,8 @@ export const CUISINE_PHOTOS = {
   Chinese: ["/food/momos.jpg", "/food/noodles-2.jpg", "/food/noodles.jpg", "/food/dimsum.jpg"],
   Biryani: ["/food/biryani.jpg", "/food/biryani-3.jpg", "/food/veg-biryani.jpg"],
   Pizza: ["/food/margherita.jpg", "/food/pizza-board.jpg", "/food/pizza.jpg", "/food/pizza-paper.jpg", "/food/pizza-spinach.jpg", "/food/pizza-slice.jpg"],
-  "Street Food": ["/food/vada-pav.jpg", "/food/street-food.jpg", "/food/vada-pav-2.jpg", "/food/burgers.jpg"],
-  Desserts: ["/food/gulab-jamun.jpg", "/food/desserts.jpg", "/food/jalebi.jpg"],
+  "Street Food": ["/food/vada-pav.jpg", "/food/street-food.jpg", "/food/vada-pav-2.jpg"],
+  Desserts: ["/food/desserts.jpg", "/food/jalebi.jpg", "/food/kulfi.jpg"],
 };
 
 // Extra photo sets used for dishes (not restaurant cuisines).
@@ -59,7 +59,7 @@ const KEYWORDS = [
   ["South Indian", /dosa|idli|vada|uttapam|appam|tiffin|udupi|sambar|bhavan|dakshin|upma/i],
   ["Street Food", /chaat|puri|pav|snack|samosa|dabeli|roll|bhel|street|tikki|kachori/i],
   ["Breads", /naan|roti|paratha|kulcha|bhatura|\bbreads?\b/i],
-  ["Ice Cream", /ice cream|kulfi|sundae|brownie|falooda/i],
+  ["Ice Cream", /ice cream|kulfi|sundae|brownie|falooda|\bbakes?\b|cake/i],
   ["Desserts", /sweet|dessert|halwa|cake|bake|mithai|jamun|jalebi|tukda|kheer|rasmalai/i],
   ["North Indian", /paneer|masala|tikka|tandoor|kofta|dal|rajma|chole|curry|kebab|kabab|rogan|thali|punjabi|dhaba|rasoi|chicken|mutton|kadai|makhani/i],
 ];
@@ -73,6 +73,29 @@ export function dishPhoto(text, fallback) {
 
 export function guessCuisine(text = "") {
   return KEYWORDS.find(([, re]) => re.test(text))?.[0];
+}
+
+// Pick photos for a list so no photo repeats while the cuisine still matches.
+export function photosForList(restaurants) {
+  const used = new Set();
+  const all = Object.values(CUISINE_PHOTOS).flat();
+  return restaurants.map((r) => {
+    const cuisines = r.cuisines?.length ? r.cuisines : ["North Indian"];
+    const start = hash(String(r._id).slice(-8));
+    for (const c of cuisines) {
+      const list = CUISINE_PHOTOS[c] || [];
+      for (let i = 0; i < list.length; i++) {
+        const p = list[(start + i) % list.length];
+        if (!used.has(p)) {
+          used.add(p);
+          return p;
+        }
+      }
+    }
+    const p = all.find((x) => !used.has(x)) || photoFor(r);
+    used.add(p);
+    return p;
+  });
 }
 
 export function photoFor(restaurant, hint = "") {

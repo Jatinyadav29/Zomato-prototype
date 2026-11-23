@@ -73,7 +73,7 @@ export function Login() {
   const demo = (email) => setForm({ email, password: "password123" });
 
   return (
-    <AuthShell title="Welcome back" kicker="hungry again?" sub="Log in to order from 1,000,000 kitchens, or to run your own.">
+    <AuthShell title="Welcome back" kicker="hungry again?" sub="Log in to order from kitchens across 8 cities, or to run your own.">
       <form className="form" onSubmit={submit}>
         <label className="field">
           <span>Email</span>

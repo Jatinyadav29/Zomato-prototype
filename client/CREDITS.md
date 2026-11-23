@@ -30,9 +30,7 @@ They were resized to 1000px for the web. Photographer names are listed where Uns
 | street-food.jpg | https://unsplash.com/photos/KPC-IA1-ZaA | |
 | vada-pav.jpg | https://unsplash.com/photos/mt5uiK-PAD4 | Zoshua Colah |
 | vada-pav-2.jpg | https://unsplash.com/photos/ojKsslC330U | Zoshua Colah |
-| burgers.jpg | https://unsplash.com/photos/2jC_UzxwMNI | Oscar Maradiaga |
 | desserts.jpg | https://unsplash.com/photos/2oJ4eGRPqrE | Umair Ali Asad |
-| gulab-jamun.jpg | https://unsplash.com/photos/uwu2ZLDmX8k | |
 | jalebi.jpg | https://unsplash.com/photos/RWdMRDLAccs | fuseviews |
 | mango-lassi.jpg | https://unsplash.com/photos/KlVIYmGVRQ8 | |
 | cold-drink.jpg | https://unsplash.com/photos/jKADJEdhk1U | |

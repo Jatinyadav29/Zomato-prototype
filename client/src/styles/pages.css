@@ -3403,3 +3403,33 @@ body {
 .table__actions .table__btn + .table__btn {
   margin-left: 6px;
 }
+.how__item:nth-child(2) {
+  transform: none;
+}
+.how__item:nth-child(1) {
+  transform: rotate(-1deg);
+}
+.how__item:nth-child(3) {
+  transform: rotate(1deg);
+}
+@media (max-width: 860px) {
+  .city-tabs,
+  .menu-toolbar__cats,
+  .cuisine-row {
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+  .reviews__head {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .reviews__head h2 {
+    font-size: 44px;
+  }
+  .how__item:nth-child(n) {
+    transform: none;
+  }
+}
+.hero__scribble {
+  display: none;
+}

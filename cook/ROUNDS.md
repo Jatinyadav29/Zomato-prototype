@@ -101,3 +101,17 @@ Round 4 critic medians (comp/color/type/polish/ship): S01 8/8.25/8/7/7.25 | S02 
 Bug found by critic B: mobile hero broken + horizontal scroll, caused by round-4 desktop CSS appended after the mobile media query. Fix: final mobile override block kept LAST in pages.css; html/body overflow-x: clip. Verified by crop of r05/S01m.
 Changes: dish photo sets (beverages, breads, ice cream; +9 photos, 38 total), keyword map extended; menu manager shows "Sold out" only; live orders pinned first as full-width hero card; "Treat yourself" card (priciest available dish); closed cards keep colour; footer eyes moved; search placeholder shortened.
 Commit fecc9b3. Round 5 critics running.
+
+## Round 06
+Time: 21:38 to ~21:52 IST
+Round 5 critic medians (comp/color/type/polish/ship): S01 7.5/8/7.5/7/7 | S02 7.5/8/7/7/7 | S03 6/7.5/7/7/6 | S04 6.5/7/6.5/7/6.5 | S05 6.5/8/7/5.5/5.5 | S06 7.5/8/7.5/7/7 | S07 6.5/7/5.5/6/5.5 | S08 6/7/6/7/6 | S01m 6/8/7/5/5 | S02m 7/8/7/7/7
+Note: critic A judged type size from downscaled images (claims 9-10px; measured CSS is 14-16px body). Discounted those claims.
+Bugs fixed: real mobile overflow measured (body scrollWidth 405 vs 390) -> culprit .hitters__burst (cook/tools/overflow.mjs); now 390. Harness: lazy images missing in full-page stills -> shots.mjs now scrolls before capture. Table actions now buttons in a "Next step" column. Login plate kept inside panel.
+Changes: ticket "time ago" chips (late = red), payment icons + note callout, login subtitle + demo buttons, bigger hero CTA, mobile menu rows wrap.
+
+## Round 07
+Time: 21:44 to ~22:00 IST
+Round 6 critic medians (comp/color/type/polish/ship): S01 8/9/8/7/7 | S02 7.5/8.5/7.5/6.5/6.5 | S03 7/8.5/7.5/7.5/7 | S04 7.5/8.5/7/7/7 | S05 8/9/8/7/8 | S06 7.5/8.5/7.5/7/7 | S07 7.5/8/7/6.5/6.5 | S08 7/8/7/7/7 | S01m 7/9/8/6/6 | S02m 7/9/8/7/7
+Main cross-critic gap: photo repetition/mismatch. Fix: photosForList() gives every card in a grid a distinct photo within its cuisine; removed misleading photos (gulab-jamun pan read as tomatoes, burgers on chaat kitchens); Bakes/brownie -> ice-cream set. Live tickets older than a day say "waiting since <date>". Login copy no longer claims a number. Edge fades on mobile scrollers. Hero scribble hidden on desktop.
+Measured: mobile overflow 390/390 on /, /r/:id, /checkout (overflow.mjs). E2E rerun: order 201 -> 200 -> 200 -> review 201 -> 409, 0 page errors; owner toggles/guards OK. Test docs deleted again (order 6b046653a8dd400078a614be, review 6b046657a8dd400078a614bf).
+Gate: stills r07 sent to user for approval.

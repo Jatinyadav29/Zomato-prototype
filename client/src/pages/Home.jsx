@@ -4,7 +4,7 @@ import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { restaurantsApi } from "../api/endpoints";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthProvider";
-import { CITY_NAMES, CUISINES, CUISINE_PHOTOS, formatNum, photoFor } from "../lib/constants";
+import { CITY_NAMES, CUISINES, CUISINE_PHOTOS, formatNum, photoFor, photosForList } from "../lib/constants";
 import { Checker, Scribble, Sparkle, Starburst, Underline, Wave } from "../components/Decor";
 import { IconArrow, IconBike, IconBowl, IconChef, IconPin, IconSearch } from "../components/Icons";
 import RestaurantCard, { RestaurantCardSkeleton } from "../components/RestaurantCard";
@@ -360,6 +360,8 @@ export default function Home() {
     return list;
   }, [active.data, cuisine, az]);
 
+  const photos = useMemo(() => photosForList(shown), [shown]);
+
   const shuffle = () => {
     const n = Math.floor(Math.random() * 1e9) + 1;
     try {
@@ -408,7 +410,7 @@ export default function Home() {
           <div className={`grid-cards ${isFetching && !isLoading ? "is-dim" : ""}`}>
             {isLoading && Array.from({ length: 8 }, (_, i) => <RestaurantCardSkeleton key={i} />)}
             {shown.map((r, i) => (
-              <RestaurantCard key={r._id} restaurant={r} featured={!az && !cuisine && i === 0} />
+              <RestaurantCard key={r._id} restaurant={r} featured={!az && !cuisine && i === 0} photo={photos[i]} />
             ))}
             {!isLoading && !cuisine && Array.from({ length: pending }, (_, i) => <RestaurantCardSkeleton key={`p${i}`} />)}
           </div>

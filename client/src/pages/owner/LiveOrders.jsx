@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../../api/endpoints";
-import { ACTION_LABEL, formatDateTime, timeAgo, formatINR, NEXT_STATUSES, PAYMENT_LABEL, STATUS_LABEL } from "../../lib/constants";
+import { ACTION_LABEL, formatDate, formatDateTime, timeAgo, formatINR, NEXT_STATUSES, PAYMENT_LABEL, STATUS_LABEL } from "../../lib/constants";
 import { ErrorState, SlowLoader, Spinner } from "../../components/States";
 import { toast } from "../../components/toast";
 
@@ -24,7 +24,7 @@ function OrderTicket({ order, restaurantId }) {
       <header>
         <b>{order.customer?.name || "Customer"}</b>
         <span className={`ticket__age ${Date.now() - new Date(order.createdAt) > 3600e3 ? "is-late" : ""}`} title={formatDateTime(order.createdAt)}>
-          {timeAgo(order.createdAt)}
+          {Date.now() - new Date(order.createdAt) > 864e5 ? `waiting since ${formatDate(order.createdAt)}` : timeAgo(order.createdAt)}
         </span>
       </header>
       <ul>
