@@ -129,15 +129,15 @@ export default function Orders() {
           return (
             <article key={o._id} className={`order-card order-card--${o.status}`}>
               <Link to={r._id ? `/r/${r._id}` : "#"} className="order-card__media">
+                <span className={`sticker sticker--${o.status} order-card__stamp`}>{STATUS_LABEL[o.status]}</span>
                 <img src={photoFor(r, o.items.map((i) => i.name).join(" "))} alt="" loading="lazy" />
               </Link>
               <div className="order-card__body">
                 <header>
                   <div className="order-card__title">
                     <h2 className="display">{r.name || "Restaurant"}</h2>
-                    <p className="muted">{[r.area, r.city].filter(Boolean).join(", ")} · {formatDateTime(o.createdAt)}</p>
+                    <p className="muted">{[r.area, r.city].filter(Boolean).join(", ")} · <span className="nowrap">{formatDateTime(o.createdAt)}</span></p>
                   </div>
-                  <span className={`sticker sticker--${o.status}`}>{STATUS_LABEL[o.status]}</span>
                 </header>
                 <p className="order-card__items">{o.items.map((i) => `${i.quantity} × ${i.name}`).join(", ")}</p>
                 <Progress status={o.status} />
@@ -149,7 +149,7 @@ export default function Orders() {
                     (done ? (
                       <span className="pill pill--green">Reviewed</span>
                     ) : (
-                      <button className="btn btn--sm btn--orange" onClick={() => setRating(o)}>Rate order</button>
+                      <button className="btn btn--sm btn--ghost" onClick={() => setRating(o)}>Rate order</button>
                     ))}
                 </footer>
               </div>

@@ -23,7 +23,7 @@ function OrderTicket({ order, restaurantId }) {
     <article className={`ticket ticket--${order.status}`}>
       <header>
         <b>{order.customer?.name || "Customer"}</b>
-        <span className={`sticker sticker--${order.status}`}>{STATUS_LABEL[order.status]}</span>
+        <span className="ticket__time">{formatDateTime(order.createdAt)}</span>
       </header>
       <ul>
         {order.items.map((i, idx) => (
@@ -37,7 +37,6 @@ function OrderTicket({ order, restaurantId }) {
           <span>
             <b>{formatINR(order.totalAmount)}</b> · {PAYMENT_LABEL[order.paymentMethod]}
           </span>
-          <small>{formatDateTime(order.createdAt)}</small>
         </span>
         {next.length > 0 && (
           <div className="ticket__actions">

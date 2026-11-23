@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuApi } from "../../api/endpoints";
-import { CATEGORIES, formatINR } from "../../lib/constants";
+import { CATEGORIES, dishPhoto, formatINR } from "../../lib/constants";
 import { VegMark } from "../../components/Decor";
 import { IconEdit, IconPlus, IconTrash } from "../../components/Icons";
 import Modal from "../../components/Modal";
@@ -50,6 +50,7 @@ function ItemForm({ initial, onSubmit, busy, error, submitLabel }) {
 function Row({ item, id }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const thumb = dishPhoto(`${item.category} ${item.name}`);
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["menu", id] });
   };
@@ -73,6 +74,11 @@ function Row({ item, id }) {
   });
   return (
     <li className={`mm-row ${item.isAvailable ? "" : "is-off"}`}>
+      {thumb ? (
+        <img className="mm-row__thumb" src={thumb} alt="" loading="lazy" />
+      ) : (
+        <span className={`mm-row__thumb mm-row__thumb--tile ${item.isVeg ? "is-veg" : ""}`} aria-hidden="true">{item.name.slice(0, 1)}</span>
+      )}
       <VegMark veg={item.isVeg} />
       <b className="mm-row__name">{item.name}</b>
       <span className="mm-row__price">{formatINR(item.price)}</span>

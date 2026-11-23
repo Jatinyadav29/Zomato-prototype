@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { analyticsApi, ordersApi, restaurantsApi } from "../../api/endpoints";
 import { formatDate, formatINR, formatNum, istDate } from "../../lib/constants";
 import { Scribble, Starburst, Stars } from "../../components/Decor";
-import { ComingSoon, ErrorState, SlowLoader, Skeleton } from "../../components/States";
+import { ErrorState, SlowLoader, Skeleton } from "../../components/States";
 
 const RANGES = [
   { days: 7, label: "7 days" },
@@ -109,7 +109,7 @@ function AnalyticsTile({ id, kind, title, render, soon }) {
     <div className="dash-card dash-card--tile" title={`GET /api/analytics/restaurants/:id/${kind}`}>
       <h3 className="display">{title}</h3>
       {q.isLoading && <Skeleton h={60} />}
-      {q.error && (q.error.status === 501 ? <ComingSoon compact title="Cooking" text={soon} /> : <ErrorState error={q.error} compact />)}
+      {q.error && (q.error.status === 501 ? <p className="tile-soon"><span className="tile-soon__tag">Coming soon</span>{soon}</p> : <ErrorState error={q.error} compact />)}
       {q.data && render(q.data)}
     </div>
   );
@@ -223,7 +223,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <h2 className="display dash__more">More insights</h2>
+      <div className="dash__more-head">
+        <h2 className="display dash__more">More insights</h2>
+        <Starburst size={78} color="var(--orange)" ink="var(--cream)" rotate={-8}>On the stove</Starburst>
+      </div>
       <div className="dash__tiles">
         <AnalyticsTile id={id} kind="top-dishes" title="Top dishes" soon="Your best sellers, ranked by plates sold." render={(d) => (
           <ol className="mini-list">{d.dishes.map((x) => <li key={x.menuItemId}><span>{x.name}</span><b>{formatNum(x.quantitySold)} sold</b></li>)}</ol>

@@ -7,7 +7,8 @@ They were resized to 1000px for the web. Photographer names are listed where Uns
 | File | Unsplash photo | Photographer |
 |---|---|---|
 | biryani.jpg | https://unsplash.com/photos/ysmeQt1dzcw | Mario Raj |
-| biryani-2.jpg | https://unsplash.com/photos/I7-ORDdavFk | brahmediting |
+| biryani-3.jpg | https://unsplash.com/photos/0j4bisyPo3M | Shreyak Singh |
+| veg-biryani.jpg | https://unsplash.com/photos/n1z3gc9gJ8I | Mario Raj |
 | north-indian.jpg | https://unsplash.com/photos/vl2y3qoKq3E | Mohammad Fahim |
 | curry.jpg | https://unsplash.com/photos/sqcH2q7lkvo | Raman |
 | thali.jpg | https://unsplash.com/photos/bKmSUcAGrvI | fuseviews |
@@ -20,7 +21,6 @@ They were resized to 1000px for the web. Photographer names are listed where Uns
 | dimsum.jpg | https://unsplash.com/photos/q66grqqHpDQ | Pooja Chaudhary |
 | noodles.jpg | https://unsplash.com/photos/2a1-ttrWiw0 | |
 | noodles-2.jpg | https://unsplash.com/photos/LO7rNP0LRro | |
-| chinese-crispy.jpg | https://unsplash.com/photos/-bxGTjZ6dt8 | |
 | pizza.jpg | https://unsplash.com/photos/uU0Anw-8Vsg | Fatima Akram |
 | pizza-slice.jpg | https://unsplash.com/photos/OklpRh8-Sns | Peter Bravo de los Rios |
 | pizza-board.jpg | https://unsplash.com/photos/frTrM7Gdkho | Nadya Filatova |

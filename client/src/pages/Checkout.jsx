@@ -16,6 +16,11 @@ const PAY = [
   { id: "cod", label: "Cash", text: "Pay when it arrives" },
 ];
 
+function dishPhoto(text, restaurant) {
+  const c = guessCuisine(text);
+  return c ? CUISINE_PHOTOS[c][text.length % CUISINE_PHOTOS[c].length] : photoFor(restaurant);
+}
+
 const SIDE_CATEGORIES = ["Desserts", "Indian Sweets", "Beverages", "Ice Cream & Kulfi", "Breads", "Sides", "Bakes"];
 
 function Extras({ restaurant }) {
@@ -139,10 +144,10 @@ export default function Checkout() {
           <ul className="checkout__items">
             {cart.items.map((i) => (
               <li key={i.menuItemId}>
-                <VegMark veg={i.isVeg} />
+                <img className="checkout__thumb" src={dishPhoto(i.name, cart.restaurant)} alt="" loading="lazy" />
                 <span className="checkout__name">
                   <b>{i.name}</b>
-                  <small>{formatINR(i.price)} each</small>
+                  <small><VegMark veg={i.isVeg} /> {formatINR(i.price)} each</small>
                 </span>
                 <span className="qty">
                   <button onClick={() => setQty(i.menuItemId, i.quantity - 1)} aria-label="Remove one"><IconMinus width={14} height={14} /></button>
@@ -159,6 +164,7 @@ export default function Checkout() {
           <div className="pay-options" role="radiogroup" aria-label="Payment method">
             {PAY.map((p) => (
               <button key={p.id} role="radio" aria-checked={pay === p.id} className={`pay-option ${pay === p.id ? "is-active" : ""}`} onClick={() => setPay(p.id)}>
+                {pay === p.id && <span className="pay-option__check" aria-hidden="true">✓</span>}
                 <b className="display">{p.label}</b>
                 <span>{p.text}</span>
               </button>

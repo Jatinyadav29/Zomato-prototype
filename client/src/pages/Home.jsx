@@ -353,7 +353,9 @@ export default function Home() {
     if (!az) {
       const seen = new Set();
       const brand = (r) => r.name.split(",")[0].trim();
-      list = list.filter((r) => (seen.has(brand(r)) ? false : seen.add(brand(r)))).slice(0, PAGE_SIZE);
+      list = list.filter((r) => (seen.has(brand(r)) ? false : seen.add(brand(r))));
+      // featured card takes 2 cells: 1 + 10 cards fills three rows of four exactly
+      list = list.slice(0, cuisine ? PAGE_SIZE : list.length >= 11 ? 11 : list.length);
     }
     return list;
   }, [active.data, cuisine, az]);

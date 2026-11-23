@@ -138,6 +138,19 @@ function BagPanel({ restaurant }) {
   );
 }
 
+function MobileBagBar({ restaurant }) {
+  const { cart, count, subtotal } = useCart();
+  if (cart.restaurant?._id !== restaurant._id || !count) return null;
+  return (
+    <Link to="/checkout" className="mobile-bag">
+      <span>
+        <b>{count} item{count > 1 ? "s" : ""}</b> · {formatINR(subtotal)}
+      </span>
+      <span className="mobile-bag__go">View bag</span>
+    </Link>
+  );
+}
+
 function Reviews({ id }) {
   const [page, setPage] = useState(1);
   const { data, error, isLoading, isFetching } = useQuery({
@@ -289,8 +302,8 @@ export default function Restaurant() {
             </div>
           ) : groups.length ? (
             <div className={`menu-cols ${mq.isFetching ? "is-dim" : ""}`}>
-              <div>{groups.slice(0, half).map(([cat, items], i) => <MenuBlock key={cat} category={cat} items={items} restaurant={r} index={i * 2} canOrder={canOrder} withPhoto={i === 0} />)}</div>
-              <div>{groups.slice(half).map(([cat, items], i) => <MenuBlock key={cat} category={cat} items={items} restaurant={r} index={i * 2 + 1} canOrder={canOrder} withPhoto={i === 1} />)}</div>
+              <div>{groups.slice(0, half).map(([cat, items], i) => <MenuBlock key={cat} category={cat} items={items} restaurant={r} index={i * 2} canOrder={canOrder} withPhoto={i % 2 === 0} />)}</div>
+              <div>{groups.slice(half).map(([cat, items], i) => <MenuBlock key={cat} category={cat} items={items} restaurant={r} index={i * 2 + 1} canOrder={canOrder} withPhoto={i % 2 === 1} />)}</div>
             </div>
           ) : (
             <p className="muted">No dishes match this filter.</p>
@@ -304,6 +317,7 @@ export default function Restaurant() {
       </section>
 
       <Reviews id={id} />
+      <MobileBagBar restaurant={r} />
     </>
   );
 }

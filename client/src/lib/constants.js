@@ -21,8 +21,8 @@ export const CATEGORIES = [
 export const CUISINE_PHOTOS = {
   "North Indian": ["/food/north-indian.jpg", "/food/paneer-tikka.jpg", "/food/curry.jpg", "/food/thali.jpg"],
   "South Indian": ["/food/dosa-top.jpg", "/food/idli.jpg", "/food/south-indian.jpg", "/food/idli-leaf.jpg"],
-  Chinese: ["/food/momos.jpg", "/food/noodles-2.jpg", "/food/chinese-crispy.jpg", "/food/noodles.jpg", "/food/dimsum.jpg"],
-  Biryani: ["/food/biryani.jpg", "/food/biryani-2.jpg"],
+  Chinese: ["/food/momos.jpg", "/food/noodles-2.jpg", "/food/noodles.jpg", "/food/dimsum.jpg"],
+  Biryani: ["/food/biryani.jpg", "/food/biryani-3.jpg", "/food/veg-biryani.jpg"],
   Pizza: ["/food/margherita.jpg", "/food/pizza-board.jpg", "/food/pizza.jpg", "/food/pizza-paper.jpg", "/food/pizza-spinach.jpg", "/food/pizza-slice.jpg"],
   "Street Food": ["/food/vada-pav.jpg", "/food/street-food.jpg", "/food/vada-pav-2.jpg", "/food/burgers.jpg"],
   Desserts: ["/food/gulab-jamun.jpg", "/food/desserts.jpg", "/food/jalebi.jpg"],
@@ -53,6 +53,13 @@ const KEYWORDS = [
   ["Desserts", /sweet|dessert|halwa|kulfi|ice cream|cake|bake|mithai/i],
 ];
 // Restaurant docs populated inside orders have no cuisines, so guess from names.
+export function dishPhoto(text, fallback) {
+  const c = guessCuisine(text);
+  if (!c) return fallback;
+  const list = CUISINE_PHOTOS[c];
+  return list[hash(text) % list.length];
+}
+
 export function guessCuisine(text = "") {
   return KEYWORDS.find(([, re]) => re.test(text))?.[0];
 }
