@@ -26,6 +26,7 @@ function saveReviewed(set) {
 }
 
 const STEPS = ["placed", "preparing", "delivered"];
+const isLive = (o) => (o.status === "placed" || o.status === "preparing" ? 1 : 0);
 
 function Progress({ status }) {
   if (status === "cancelled") return <div className="progress progress--cancelled">This order was cancelled by the kitchen.</div>;
@@ -123,11 +124,11 @@ export default function Orders() {
         </div>
       )}
       <div className={`orders__list ${isFetching && !isLoading ? "is-dim" : ""}`}>
-        {data?.orders.map((o) => {
+        {[...(data?.orders || [])].sort((a, b) => isLive(b) - isLive(a)).map((o) => {
           const r = o.restaurant || {};
           const done = reviewed.has(o._id);
           return (
-            <article key={o._id} className={`order-card order-card--${o.status}`}>
+            <article key={o._id} className={`order-card order-card--${o.status} ${isLive(o) ? "order-card--live" : ""}`}>
               <Link to={r._id ? `/r/${r._id}` : "#"} className="order-card__media">
                 <span className={`sticker sticker--${o.status} order-card__stamp`}>{STATUS_LABEL[o.status]}</span>
                 <img src={photoFor(r, o.items.map((i) => i.name).join(" "))} alt="" loading="lazy" />

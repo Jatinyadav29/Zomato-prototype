@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { menuApi, restaurantsApi, reviewsApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthProvider";
 import { useCart } from "../cart/CartContext";
-import { CUISINE_PHOTOS, formatDate, formatINR, guessCuisine, photoFor } from "../lib/constants";
+import { dishPhoto, formatDate, formatINR, photoFor } from "../lib/constants";
 import { Checker, Eyes, Scribble, Sparkle, Stars, Starburst, VegMark } from "../components/Decor";
 import { IconBack, IconMinus, IconPin, IconPlus } from "../components/Icons";
 import { ErrorState, PageLoader, Skeleton } from "../components/States";
@@ -33,8 +33,7 @@ function QtyControl({ qty, onAdd, onSet, disabled }) {
 }
 
 function photoForCategory(category, items, restaurant) {
-  const c = guessCuisine(`${category} ${items.map((i) => i.name).join(" ")}`);
-  return c ? CUISINE_PHOTOS[c][0] : photoFor(restaurant);
+  return dishPhoto(category, null) || dishPhoto(items.map((i) => i.name).join(" "), photoFor(restaurant));
 }
 
 function MenuBlock({ category, items, restaurant, index, canOrder, withPhoto }) {
@@ -80,9 +79,10 @@ function MenuBlock({ category, items, restaurant, index, canOrder, withPhoto }) 
   );
 }
 
-function BagPanel({ restaurant }) {
-  const { cart, subtotal, setQty } = useCart();
+function BagPanel({ restaurant, menu = [], canOrder }) {
+  const { cart, subtotal, setQty, addItem } = useCart();
   const nav = useNavigate();
+  const treat = menu.filter((m) => m.isAvailable).reduce((b, m) => (!b || m.price > b.price ? m : b), null);
   const mine = cart.restaurant?._id === restaurant._id;
   const items = mine ? cart.items : [];
   return (
@@ -130,6 +130,28 @@ function BagPanel({ restaurant }) {
           </>
         )}
       </div>
+      {treat && (
+        <div className="treat">
+          <div className="treat__photo">
+            <img src={dishPhoto(treat.name, null) || dishPhoto(treat.category, photoFor(restaurant))} alt="" loading="lazy" />
+            <Starburst className="treat__burst" size={84} color="var(--yellow)" rotate={12}>
+              Treat
+              <br />
+              yourself
+            </Starburst>
+          </div>
+          <small>The big plate here</small>
+          <b className="display">{treat.name}</b>
+          <div className="treat__row">
+            <span className="display">{formatINR(treat.price)}</span>
+            {canOrder && (
+              <button className="btn btn--sm btn--orange" onClick={() => addItem(restaurant, treat) && toast(`${treat.name} added to your bag`)}>
+                <IconPlus width={16} height={16} /> Add
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="bag-panel__promise">
         <b className="display">Take away &amp; delivery</b>
         <p>Prices are checked by the kitchen when you order, so the total you see after ordering is the real one.</p>
@@ -313,7 +335,7 @@ export default function Restaurant() {
             <Eyes />
           </div>
         </div>
-        <BagPanel restaurant={r} />
+        <BagPanel restaurant={r} menu={mq.data?.menuItems} canOrder={canOrder} />
       </section>
 
       <Reviews id={id} />

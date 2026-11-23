@@ -69,7 +69,7 @@ function Hero({ city, total, onCity, onSearch }) {
             </label>
             <label className="finder__q">
               <span className="sr-only">Search restaurants</span>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a kitchen or cuisine" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kitchens or cuisines" />
               <IconSearch width={18} height={18} />
             </label>
             <button className="btn btn--orange finder__go">Find food</button>

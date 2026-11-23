@@ -28,6 +28,13 @@ export const CUISINE_PHOTOS = {
   Desserts: ["/food/gulab-jamun.jpg", "/food/desserts.jpg", "/food/jalebi.jpg"],
 };
 
+// Extra photo sets used for dishes (not restaurant cuisines).
+const DISH_PHOTOS = {
+  Beverages: ["/food/mango-lassi.jpg", "/food/cold-drink.jpg", "/food/shakes.jpg", "/food/chai.jpg", "/food/chai-cup.jpg"],
+  Breads: ["/food/naan.jpg", "/food/paneer-naan.jpg"],
+  "Ice Cream": ["/food/ice-cream.jpg", "/food/kulfi.jpg"],
+};
+
 export const CUISINE_TINTS = {
   "North Indian": "var(--orange)",
   "South Indian": "var(--green)",
@@ -45,18 +52,22 @@ function hash(str = "") {
 }
 
 const KEYWORDS = [
-  ["Biryani", /biryani|biriyani|dum\b|pulao/i],
+  ["Beverages", /lassi|soda|chai|coffee|\btea\b|juice|shake|lemonade|cola|sprite|drink|beverage|buttermilk|chaas/i],
+  ["Biryani", /biryani|biriyani|\bdum\b|pulao|\brice\b/i],
   ["Pizza", /pizza|pasta|garlic bread|slice/i],
-  ["Chinese", /chinese|momo|noodle|wok|bamboo|manchurian|dragon|hakka|chilli/i],
-  ["South Indian", /dosa|idli|vada|uttapam|appam|tiffin|udupi|sambar|bhavan|dakshin/i],
-  ["Street Food", /chaat|puri|pav|snack|samosa|dabeli|roll|bhel|street/i],
-  ["Desserts", /sweet|dessert|halwa|kulfi|ice cream|cake|bake|mithai/i],
+  ["Chinese", /chinese|momo|noodle|wok|bamboo|manchurian|dragon|hakka|chilli|fried rice/i],
+  ["South Indian", /dosa|idli|vada|uttapam|appam|tiffin|udupi|sambar|bhavan|dakshin|upma/i],
+  ["Street Food", /chaat|puri|pav|snack|samosa|dabeli|roll|bhel|street|tikki|kachori/i],
+  ["Breads", /naan|roti|paratha|kulcha|bhatura|\bbreads?\b/i],
+  ["Ice Cream", /ice cream|kulfi|sundae|brownie|falooda/i],
+  ["Desserts", /sweet|dessert|halwa|cake|bake|mithai|jamun|jalebi|tukda|kheer|rasmalai/i],
+  ["North Indian", /paneer|masala|tikka|tandoor|kofta|dal|rajma|chole|curry|kebab|kabab|rogan|thali|punjabi|dhaba|rasoi|chicken|mutton|kadai|makhani/i],
 ];
 // Restaurant docs populated inside orders have no cuisines, so guess from names.
 export function dishPhoto(text, fallback) {
   const c = guessCuisine(text);
   if (!c) return fallback;
-  const list = CUISINE_PHOTOS[c];
+  const list = CUISINE_PHOTOS[c] || DISH_PHOTOS[c];
   return list[hash(text) % list.length];
 }
 
@@ -65,7 +76,8 @@ export function guessCuisine(text = "") {
 }
 
 export function photoFor(restaurant, hint = "") {
-  const cuisine = restaurant?.cuisines?.[0] || guessCuisine(`${restaurant?.name || ""} ${hint}`) || "North Indian";
+  const guessed = guessCuisine(`${restaurant?.name || ""} ${hint}`);
+  const cuisine = restaurant?.cuisines?.[0] || (CUISINE_PHOTOS[guessed] ? guessed : null) || "North Indian";
   const list = CUISINE_PHOTOS[cuisine] || CUISINE_PHOTOS["North Indian"];
   // ObjectIds share long prefixes, so hash the tail for a better spread.
   const key = String(restaurant?._id || restaurant?.name || hint);

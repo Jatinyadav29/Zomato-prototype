@@ -34,3 +34,12 @@ They were resized to 1000px for the web. Photographer names are listed where Uns
 | desserts.jpg | https://unsplash.com/photos/2oJ4eGRPqrE | Umair Ali Asad |
 | gulab-jamun.jpg | https://unsplash.com/photos/uwu2ZLDmX8k | |
 | jalebi.jpg | https://unsplash.com/photos/RWdMRDLAccs | fuseviews |
+| mango-lassi.jpg | https://unsplash.com/photos/KlVIYmGVRQ8 | |
+| cold-drink.jpg | https://unsplash.com/photos/jKADJEdhk1U | |
+| shakes.jpg | https://unsplash.com/photos/CrK843Pl9a4 | |
+| chai.jpg | https://unsplash.com/photos/7-PQGUrIGOc | |
+| chai-cup.jpg | https://unsplash.com/photos/_w_9J1qJD9E | Harshit Mahabale |
+| naan.jpg | https://unsplash.com/photos/mAA2-Ti02Xs | Frederick Shaw |
+| paneer-naan.jpg | https://unsplash.com/photos/r5la-5p-iRs | |
+| kulfi.jpg | https://unsplash.com/photos/C6eovoS7gXo | |
+| ice-cream.jpg | https://unsplash.com/photos/idTwDKt2j2o | Kobby Mendez |

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { menuApi, ordersApi, restaurantsApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthProvider";
 import { useCart } from "../cart/CartContext";
-import { CUISINE_PHOTOS, formatINR, guessCuisine, PAYMENT_LABEL, photoFor } from "../lib/constants";
+import { dishPhoto, formatINR, PAYMENT_LABEL, photoFor } from "../lib/constants";
 import { Scribble, Starburst, VegMark } from "../components/Decor";
 import { IconMinus, IconPlus, IconTrash } from "../components/Icons";
 import { toast } from "../components/toast";
@@ -16,10 +16,6 @@ const PAY = [
   { id: "cod", label: "Cash", text: "Pay when it arrives" },
 ];
 
-function dishPhoto(text, restaurant) {
-  const c = guessCuisine(text);
-  return c ? CUISINE_PHOTOS[c][text.length % CUISINE_PHOTOS[c].length] : photoFor(restaurant);
-}
 
 const SIDE_CATEGORIES = ["Desserts", "Indian Sweets", "Beverages", "Ice Cream & Kulfi", "Breads", "Sides", "Bakes"];
 
@@ -38,8 +34,7 @@ function Extras({ restaurant }) {
       </div>
       <div className="extras__grid">
         {picks.map((m) => {
-          const c = guessCuisine(`${m.category} ${m.name}`);
-          const img = c ? CUISINE_PHOTOS[c][m.name.length % CUISINE_PHOTOS[c].length] : photoFor(restaurant);
+          const img = dishPhoto(m.name, null) || dishPhoto(m.category, photoFor(restaurant));
           return (
             <article key={m._id} className="extra">
               <img src={img} alt="" loading="lazy" />
@@ -144,7 +139,7 @@ export default function Checkout() {
           <ul className="checkout__items">
             {cart.items.map((i) => (
               <li key={i.menuItemId}>
-                <img className="checkout__thumb" src={dishPhoto(i.name, cart.restaurant)} alt="" loading="lazy" />
+                <img className="checkout__thumb" src={dishPhoto(i.name, photoFor(cart.restaurant))} alt="" loading="lazy" />
                 <span className="checkout__name">
                   <b>{i.name}</b>
                   <small><VegMark veg={i.isVeg} /> {formatINR(i.price)} each</small>

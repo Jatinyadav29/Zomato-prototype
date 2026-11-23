@@ -50,7 +50,7 @@ function ItemForm({ initial, onSubmit, busy, error, submitLabel }) {
 function Row({ item, id }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const thumb = dishPhoto(`${item.category} ${item.name}`);
+  const thumb = dishPhoto(item.name, null) || dishPhoto(item.category, null);
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["menu", id] });
   };
@@ -84,7 +84,7 @@ function Row({ item, id }) {
       <span className="mm-row__price">{formatINR(item.price)}</span>
       <button className={`switch switch--sm ${item.isAvailable ? "is-on" : ""}`} role="switch" aria-checked={item.isAvailable} aria-label={`${item.name} available`} disabled={patch.isPending} onClick={() => patch.mutate({ isAvailable: !item.isAvailable })}>
         <span className="switch__track"><span className="switch__thumb" /></span>
-        <span>{item.isAvailable ? "In stock" : "Sold out"}</span>
+        {!item.isAvailable && <span className="mm-row__sold">Sold out</span>}
       </button>
       <button className="icon-btn" onClick={() => setEditing(true)} aria-label={`Edit ${item.name}`}><IconEdit width={18} height={18} /></button>
       <button className="icon-btn icon-btn--danger" disabled={del.isPending} onClick={() => window.confirm(`Delete ${item.name}?`) && del.mutate()} aria-label={`Delete ${item.name}`}><IconTrash width={18} height={18} /></button>
