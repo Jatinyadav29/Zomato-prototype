@@ -47,6 +47,12 @@ async function getRestaurants(req, res) {
   });
 }
 
+// [frontend fix] GET /api/restaurants/mine (owner): restaurants of the logged-in owner
+async function getMyRestaurants(req, res) {
+  const restaurants = await Restaurant.find({ owner: req.user.id }).sort({ name: 1, _id: 1 });
+  res.json({ count: restaurants.length, restaurants });
+}
+
 // GET /api/restaurants/:id
 async function getRestaurantById(req, res) {
   const restaurant = await Restaurant.findById(req.params.id).populate(
@@ -210,7 +216,8 @@ async function getTopCustomers(req, res) {
     [
       {
         $match: {
-          restaurant: new mongoose.Types.ObjectId("687a3bd20002000000000000"),
+          // [frontend fix] was a hard-coded restaurant id
+          restaurant: new mongoose.Types.ObjectId(id),
           status: "delivered",
         },
       },
@@ -333,4 +340,5 @@ module.exports = {
   getResturantRevenue,
   getTopCustomers,
   getTopPerformerReasturants,
+  getMyRestaurants,
 };

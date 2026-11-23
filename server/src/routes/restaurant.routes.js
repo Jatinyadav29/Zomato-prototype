@@ -8,6 +8,7 @@ const {
   getResturantRevenue,
   getTopCustomers,
   getTopPerformerReasturants,
+  getMyRestaurants,
 } = require("../controllers/restaurant.controller");
 const {
   getMenu,
@@ -23,6 +24,11 @@ const router = express.Router();
 
 // Restaurants
 router.get("/", getRestaurants);
+// [frontend fix] static paths must be registered BEFORE "/:id", otherwise
+// Express treats "mine" / "top-performers" as an id.
+router.get("/mine", authUser, authorize("owner"), getMyRestaurants);
+// TOP Performing Restaurants
+router.get("/top-performers", getTopPerformerReasturants);
 router.get("/:id", getRestaurantById);
 router.post("/", authUser, authorize("owner"), createRestaurant);
 router.patch("/:id", authUser, authorize("owner"), updateRestaurant);
@@ -50,8 +56,5 @@ router.get("/:id/revenue", authUser, authorize("owner"), getResturantRevenue);
 
 // Top Customers of a restaurant (owner dashboard)
 router.get("/:id/top-customers", authUser, authorize("owner"), getTopCustomers);
-
-// TOP Performing Restaurants
-router.get("/top-performers", getTopPerformerReasturants);
 
 module.exports = router;
