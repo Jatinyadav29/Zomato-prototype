@@ -131,7 +131,7 @@ async function deleteRestaurant(req, res) {
   res.json({ message: "Restaurant deleted" });
 }
 
-// GET /api/resturant/:id/revenue (owner, own resturant only)
+// GET /api/restaurant/:id/revenue (owner, own resturant only)
 async function getResturantRevenue(req, res) {
   const { id } = req.params;
   const to = req.query.to ? new Date(req.query.to) : new Date();
@@ -201,6 +201,129 @@ async function getResturantRevenue(req, res) {
     days: revenue.days,
   });
 }
+
+// GET /api/restaurant/:id/top-customers
+async function getTopCustomers(req, res) {
+  const { id } = req.params;
+
+  const response = await orderModel.aggregate([
+    [
+      {
+        $match: {
+          restaurant: new mongoose.Types.ObjectId("687a3bd20002000000000000"),
+          status: "delivered",
+        },
+      },
+      {
+        $group: {
+          _id: "$customer",
+          totalRevenue: {
+            $sum: "$totalAmount",
+          },
+          totalOrder: {
+            $sum: 1,
+          },
+          averageOrderValue: {
+            $avg: "$totalAmount",
+          },
+        },
+      },
+      {
+        $sort: {
+          totalRevenue: -1,
+        },
+      },
+      {
+        $limit: 3,
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                email: 1,
+                _id: 0,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ],
+  ]);
+
+  return res.json({
+    message: "Top customers retrived successfully",
+    topCustomer: response,
+  });
+}
+
+// GET /api/restaurants/top-performers
+async function getTopPerformerReasturants(req, res) {
+  const response = await orderModel.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: new Date("Sun, 06 Sep 2026 00:00:00 GMT"),
+        },
+        status: "delivered",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        status: 1,
+        totalAmount: 1,
+        restaurant: 1,
+      },
+    },
+    {
+      $group: {
+        _id: "$restaurant",
+        revenue: {
+          $sum: "$totalAmount",
+        },
+      },
+    },
+    {
+      $sort: {
+        revenue: -1,
+      },
+    },
+    {
+      $limit: 5,
+    },
+    {
+      $lookup: {
+        from: "restaurants",
+        localField: "_id",
+        foreignField: "_id",
+        as: "restaurant",
+      },
+    },
+    {
+      $unwind: {
+        path: "$restaurant",
+      },
+    },
+  ]);
+
+  return res.json({
+    message: "Top performing resturants fetched",
+    topPerformers: response,
+  });
+}
+
 module.exports = {
   getRestaurants,
   getRestaurantById,
@@ -208,4 +331,6 @@ module.exports = {
   updateRestaurant,
   deleteRestaurant,
   getResturantRevenue,
+  getTopCustomers,
+  getTopPerformerReasturants,
 };

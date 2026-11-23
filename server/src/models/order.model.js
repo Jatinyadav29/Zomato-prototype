@@ -53,6 +53,6 @@ const orderSchema = new mongoose.Schema(
 
 const orderModel = mongoose.model("Order", orderSchema);
 
-// orderModel.createIndexes({ restaurant: 1 });
+// orderModel.createIndexes({ createdAt: 1 });
 
 module.exports = orderModel;
