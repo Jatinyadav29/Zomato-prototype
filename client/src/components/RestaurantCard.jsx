@@ -1,19 +1,28 @@
 import { Link } from "react-router-dom";
 import { photoFor, tintFor } from "../lib/constants";
 import { IconArrow, IconPin } from "./Icons";
+import { Starburst } from "./Decor";
 import { Skeleton } from "./States";
 
-export default function RestaurantCard({ restaurant, badge, to }) {
+export default function RestaurantCard({ restaurant, badge, to, featured = false }) {
   const r = restaurant;
   return (
-    <Link to={to || `/r/${r._id}`} className={`rcard ${r.isOpen ? "" : "rcard--closed"}`} style={{ "--tint": tintFor(r) }}>
+    <Link to={to || `/r/${r._id}`} className={`rcard ${r.isOpen ? "" : "rcard--closed"} ${featured ? "rcard--featured" : ""}`} style={{ "--tint": tintFor(r) }}>
       <div className="rcard__media">
         <img src={photoFor(r)} alt="" loading="lazy" />
         {badge && <span className="rcard__badge">{badge}</span>}
+        {featured && (
+          <Starburst className="rcard__burst" size={92} color="var(--yellow)" rotate={-12}>
+            Try
+            <br />
+            this
+          </Starburst>
+        )}
         {!r.isOpen && <span className="rcard__closed">Closed now</span>}
       </div>
       <div className="rcard__body">
         <h3 className="rcard__name">{r.name}</h3>
+        {featured && <p className="rcard__pitch hand">today's lucky dip in {r.area || r.city}</p>}
         <p className="rcard__area">
           <IconPin width={15} height={15} />
           {[r.area, r.city].filter(Boolean).join(", ")}

@@ -73,3 +73,15 @@ Gate: stills approved [no]
 
 ## User feedback inbox
 (none yet)
+
+## Round 01-02
+Time: 20:48 to ~22:05 IST
+Focus: build all screens, harness, first stills; fix blank page (window.scrollTo returns a Promise in new Chromium, effect returned it).
+Stills: cook/stills/r01, r02 | Side by side: cook/compare/r02 (shot pairs S01:R01 S02:R03 S03:R04 S04:R04 S05:R01 S06:R03 S07:R02 S08:R03 S01m:R04)
+Scores, eyeballed: critic median of 2 (sonnet + opus), 0-10 per dim (comp/color/type/polish/ship):
+S01 7/8/7/6/6 | S02 7/8/7/6.5/6 | S03 5.5/7.5/6.5/6/5 | S04 7/8/6/7/6 | S05 6/8/7/6/6 | S06 7/8/6.5/6/5.5 | S07 6.5/7/5.5/6.5/5.5 | S08 6/7/5.5/6/5 | S01m 6/8/6/5.5/5.5
+Note: critics saw side-by-sides scaled ~0.5x, so "8px text" claims are partly scale artifacts; still bumping small text.
+Measured: E2E (cook/tools/e2e.mjs) order 201 -> preparing 200 -> delivered 200 -> review 201 -> duplicate 409; reload keeps session; owner toggles round-trip; guards OK; 0 page errors.
+  Test data written: order 6b045f5da8dd400078a614bc, review 6b045f63a8dd400078a614bd (customer@foodhub.com, Annapurna Tandoor House).
+Top gaps: repeated chain names/photos in home grid; small text on owner screens; dev-leak API paths in coming-soon tiles; clipped lane tickets; empty checkout page; weak login inputs.
+Next focus: round 3 = all of the above.

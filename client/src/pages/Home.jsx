@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
 import { restaurantsApi } from "../api/endpoints";
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthProvider";
@@ -19,6 +19,7 @@ function usePreferredCity() {
   const fallback = user?.city && CITY_NAMES.includes(user.city) ? user.city : "Bhopal";
   const city = CITY_NAMES.includes(fromUrl) ? fromUrl : fallback;
   const page = Math.max(1, Number(params.get("page")) || 1);
+  const sort = params.get("sort") || "";
   const cuisine = CUISINES.includes(params.get("cuisine")) ? params.get("cuisine") : "";
   const set = (next) => {
     const merged = { city, page, cuisine, ...next };
@@ -26,6 +27,7 @@ function usePreferredCity() {
     p.set("city", merged.city);
     if (merged.page > 1) p.set("page", merged.page);
     if (merged.cuisine) p.set("cuisine", merged.cuisine);
+    if (sort) p.set("sort", sort);
     setParams(p, { replace: false });
   };
   return { city, page, cuisine, set };
@@ -276,23 +278,99 @@ function HowItWorks() {
 export default function Home() {
   const { city, page, cuisine, set } = usePreferredCity();
   const [q, setQ] = useState("");
-  const { data, error, isLoading, isFetching, refetch } = useQuery({
+  const [params, setParams] = useSearchParams();
+  const az = params.get("sort") === "az";
+  const setSort = (v) => {
+    const p = new URLSearchParams(params);
+    if (v === "az") p.set("sort", "az");
+    else p.delete("sort");
+    p.delete("page");
+    setParams(p);
+  };
+  const [seed, setSeed] = useState(() => {
+    try {
+      const v = Number(sessionStorage.getItem("foodhub.seed"));
+      if (v) return v;
+      const n = Math.floor(Math.random() * 1e9) + 1;
+      sessionStorage.setItem("foodhub.seed", String(n));
+      return n;
+    } catch {
+      return Math.floor(Math.random() * 1e9) + 1;
+    }
+  });
+
+  // A to Z: plain server pagination.
+  const azq = useQuery({
     queryKey: ["restaurants", city, page, PAGE_SIZE],
     queryFn: () => restaurantsApi.list({ city, page, limit: PAGE_SIZE }),
     placeholderData: keepPreviousData,
+    enabled: az,
   });
+  // Discover: names are sorted and chains have dozens of branches, so any one A-Z page
+  // is usually a single chain. Sample 13 random single-item pages instead (in parallel,
+  // cards fill in as they arrive) and keep one branch per brand.
+  const countq = useQuery({ queryKey: ["restaurants-count", city], queryFn: () => restaurantsApi.list({ city, page: 1, limit: 1 }), enabled: !az });
+  const totalCount = countq.data?.total || 0;
+  const samplePages = useMemo(() => {
+    if (!totalCount) return [];
+    const pages = new Set();
+    let x = seed;
+    while (pages.size < Math.min(PAGE_SIZE + 1, totalCount)) {
+      x = (x * 1103515245 + 12345) % 2147483648;
+      pages.add(1 + (x % totalCount));
+    }
+    return [...pages];
+  }, [seed, totalCount]);
+  const samples = useQueries({
+    queries: samplePages.map((pg) => ({
+      queryKey: ["restaurants", city, pg, 1],
+      queryFn: () => restaurantsApi.list({ city, page: pg, limit: 1 }),
+      staleTime: 10 * 60_000,
+      enabled: !az,
+    })),
+  });
+  const dq = {
+    data: { restaurants: samples.map((q) => q.data?.restaurants?.[0]).filter(Boolean) },
+    isLoading: !samples.some((q) => q.data),
+    isFetching: samples.some((q) => q.isFetching),
+    error: samples.find((q) => q.error)?.error,
+    refetch: () => samples.forEach((q) => q.refetch()),
+  };
+  const pending = az ? 0 : samples.filter((q) => q.isLoading).length;
+  const active = az ? azq : dq;
+  const total = az ? azq.data?.total : countq.data?.total;
+  const isLoading = az ? azq.isLoading : countq.isLoading || dq.isLoading;
+  const isFetching = az ? azq.isFetching : false;
+  const error = active.error || (!az && countq.error);
+
   useEffect(() => {
     if (page > 1) document.getElementById("kitchens")?.scrollIntoView({ behavior: "smooth" });
   }, [page]);
 
   const shown = useMemo(() => {
-    const list = data?.restaurants || [];
-    return cuisine ? list.filter((r) => r.cuisines.includes(cuisine)) : list;
-  }, [data, cuisine]);
+    let list = active.data?.restaurants || [];
+    if (cuisine) list = list.filter((r) => r.cuisines.includes(cuisine));
+    if (!az) {
+      const seen = new Set();
+      const brand = (r) => r.name.split(",")[0].trim();
+      list = list.filter((r) => (seen.has(brand(r)) ? false : seen.add(brand(r)))).slice(0, PAGE_SIZE);
+    }
+    return list;
+  }, [active.data, cuisine, az]);
+
+  const shuffle = () => {
+    const n = Math.floor(Math.random() * 1e9) + 1;
+    try {
+      sessionStorage.setItem("foodhub.seed", String(n));
+    } catch {
+      /* ignore */
+    }
+    setSeed(n);
+  };
 
   return (
     <>
-      <Hero city={city} total={data?.total} onCity={(c) => set({ city: c, page: 1 })} onSearch={setQ} />
+      <Hero city={city} total={total} onCity={(c) => set({ city: c, page: 1 })} onSearch={setQ} />
       <CuisineBand active={cuisine} onPick={(c) => set({ cuisine: c })} />
       {q ? (
         <SearchResults q={q} city={city} onClear={() => setQ("")} />
@@ -305,32 +383,48 @@ export default function Home() {
                 <Underline />
               </h2>
               <p className="muted">
-                {data ? `${formatNum(data.total)} places, A to Z` : "Finding places near you"}
-                {cuisine && ` · showing ${cuisine} on this page`}
+                {total ? `${formatNum(total)} places · ${az ? "A to Z" : "a fresh mix every visit"}` : "Finding places near you"}
+                {cuisine && ` · ${cuisine} only`}
                 {isFetching && !isLoading && " · updating"}
               </p>
             </div>
-            <div className="city-tabs" role="tablist" aria-label="City">
-              {CITY_NAMES.map((c) => (
-                <button key={c} role="tab" aria-selected={c === city} className={c === city ? "is-active" : ""} onClick={() => set({ city: c, page: 1 })}>
-                  {c}
-                </button>
-              ))}
+            <div className="listing__tools">
+              <div className="seg" role="radiogroup" aria-label="Order">
+                <button role="radio" aria-checked={!az} className={!az ? "is-active" : ""} onClick={() => setSort("discover")}>Discover</button>
+                <button role="radio" aria-checked={az} className={az ? "is-active" : ""} onClick={() => setSort("az")}>A to Z</button>
+              </div>
+              <div className="city-tabs" role="tablist" aria-label="City">
+                {CITY_NAMES.map((c) => (
+                  <button key={c} role="tab" aria-selected={c === city} className={c === city ? "is-active" : ""} onClick={() => set({ city: c, page: 1 })}>
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          {error && <ErrorState error={error} onRetry={refetch} />}
+          {error && <ErrorState error={error} onRetry={active.refetch} />}
           <div className={`grid-cards ${isFetching && !isLoading ? "is-dim" : ""}`}>
             {isLoading && Array.from({ length: 8 }, (_, i) => <RestaurantCardSkeleton key={i} />)}
-            {shown.map((r) => (
-              <RestaurantCard key={r._id} restaurant={r} />
+            {shown.map((r, i) => (
+              <RestaurantCard key={r._id} restaurant={r} featured={!az && !cuisine && i === 0} />
             ))}
+            {!isLoading && !cuisine && Array.from({ length: pending }, (_, i) => <RestaurantCardSkeleton key={`p${i}`} />)}
           </div>
-          {data && cuisine && !shown.length && (
+          {active.data && cuisine && !shown.length && (
             <p className="muted center">
-              No {cuisine} on this page. <button className="link-btn" onClick={() => set({ page: page + 1 })}>Try the next page</button> or <button className="link-btn" onClick={() => set({ cuisine: "" })}>show everything</button>.
+              No {cuisine} in this batch.{" "}
+              {az ? <button className="link-btn" onClick={() => set({ page: page + 1 })}>Try the next page</button> : <button className="link-btn" onClick={shuffle}>Shuffle again</button>} or{" "}
+              <button className="link-btn" onClick={() => set({ cuisine: "" })}>show everything</button>.
             </p>
           )}
-          <Pager page={page} totalPages={data?.totalPages} onPage={(p) => set({ page: p })} />
+          {az ? (
+            <Pager page={page} totalPages={azq.data?.totalPages} onPage={(p) => set({ page: p })} />
+          ) : (
+            <div className="pager">
+              <button className="btn btn--ink" onClick={shuffle} disabled={pending > 0}>Shuffle the kitchens</button>
+              <button className="link-btn" onClick={() => setSort("az")}>or browse all A to Z</button>
+            </div>
+          )}
         </section>
       )}
       <TopPerformers />

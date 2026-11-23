@@ -57,7 +57,7 @@ function OrderTicket({ order, restaurantId }) {
 function Column({ id, status, title, note }) {
   const q = useQuery({
     queryKey: ["owner-orders", id, status, 1],
-    queryFn: () => ordersApi.forRestaurant(id, { status, page: 1, limit: 20 }),
+    queryFn: () => ordersApi.forRestaurant(id, { status, page: 1, limit: 6 }),
     refetchInterval: 30_000,
   });
   return (
@@ -74,7 +74,7 @@ function Column({ id, status, title, note }) {
         {q.data?.orders.map((o) => <OrderTicket key={o._id} order={o} restaurantId={id} />)}
         {q.data && !q.data.orders.length && <p className="lane__empty">All clear here.</p>}
       </div>
-      {q.data?.total > 20 && <p className="lane__more">Showing the newest 20 of {formatNumSafe(q.data.total)}.</p>}
+      {q.data?.total > 6 && <p className="lane__more">+{formatNumSafe(q.data.total - 6)} more waiting. The newest 6 are shown; see the rest in the history below.</p>}
     </section>
   );
 }

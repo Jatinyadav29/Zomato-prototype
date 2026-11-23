@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ordersApi, restaurantsApi } from "../api/endpoints";
+import { menuApi, ordersApi, restaurantsApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthProvider";
 import { useCart } from "../cart/CartContext";
-import { formatINR, PAYMENT_LABEL, photoFor } from "../lib/constants";
-import { Checker, Scribble, Starburst, VegMark } from "../components/Decor";
+import { CUISINE_PHOTOS, formatINR, guessCuisine, PAYMENT_LABEL, photoFor } from "../lib/constants";
+import { Scribble, Starburst, VegMark } from "../components/Decor";
 import { IconMinus, IconPlus, IconTrash } from "../components/Icons";
+import { toast } from "../components/toast";
 import { Empty, ErrorState, Spinner } from "../components/States";
 
 const PAY = [
@@ -14,6 +15,44 @@ const PAY = [
   { id: "card", label: "Card", text: "Debit or credit card" },
   { id: "cod", label: "Cash", text: "Pay when it arrives" },
 ];
+
+const SIDE_CATEGORIES = ["Desserts", "Indian Sweets", "Beverages", "Ice Cream & Kulfi", "Breads", "Sides", "Bakes"];
+
+function Extras({ restaurant }) {
+  const { cart, addItem } = useCart();
+  const q = useQuery({ queryKey: ["menu", restaurant._id, ""], queryFn: () => menuApi.list(restaurant._id) });
+  const inBag = new Set(cart.items.map((i) => i.menuItemId));
+  const pool = (q.data?.menuItems || []).filter((m) => m.isAvailable && !inBag.has(m._id));
+  const picks = [...pool.filter((m) => SIDE_CATEGORIES.includes(m.category)), ...pool.filter((m) => !SIDE_CATEGORIES.includes(m.category))].slice(0, 4);
+  if (!picks.length) return null;
+  return (
+    <section className="extras">
+      <div className="extras__head">
+        <h2 className="display">Forgot something?</h2>
+        <span className="hand">sweet endings, cold drinks</span>
+      </div>
+      <div className="extras__grid">
+        {picks.map((m) => {
+          const c = guessCuisine(`${m.category} ${m.name}`);
+          const img = c ? CUISINE_PHOTOS[c][m.name.length % CUISINE_PHOTOS[c].length] : photoFor(restaurant);
+          return (
+            <article key={m._id} className="extra">
+              <img src={img} alt="" loading="lazy" />
+              <div>
+                <small>{m.category}</small>
+                <b>{m.name}</b>
+                <span>{formatINR(m.price)}</span>
+              </div>
+              <button className="add-btn" onClick={() => addItem(restaurant, m) && toast(`${m.name} added`)} aria-label={`Add ${m.name}`}>
+                <IconPlus width={16} height={16} /> Add
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function Placed({ order, restaurant }) {
   return (
@@ -126,6 +165,7 @@ export default function Checkout() {
             ))}
           </div>
           <p className="muted small">No real payment happens here. The method is saved on the order as a label.</p>
+          <Extras restaurant={cart.restaurant} />
         </div>
 
         <aside className="checkout__summary">
@@ -147,7 +187,16 @@ export default function Checkout() {
             )}
             <button className="link-btn summary-box__clear" onClick={clear}>Empty bag</button>
           </div>
-          <Checker color="var(--orange)" size={16} className="summary-checker" />
+          <div className="summary-note">
+            <Starburst size={86} color="var(--orange)" ink="var(--cream)" rotate={-10}>
+              Free
+              <br />
+              delivery
+            </Starburst>
+            <p>
+              <b>Hot food, one kitchen, one trip.</b> The kitchen checks every price when you order, so the total after ordering is the real one.
+            </p>
+          </div>
         </aside>
       </div>
     </section>

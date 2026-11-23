@@ -63,7 +63,7 @@ export function ErrorState({ error, onRetry, compact = false }) {
   );
 }
 
-export function ComingSoon({ title = "Coming soon", text = "This aggregation isn't implemented on the server yet (501).", compact = false }) {
+export function ComingSoon({ title = "Coming soon", text = "We're still cooking up this one. Check back soon.", compact = false }) {
   return (
     <div className={`coming-soon ${compact ? "coming-soon--compact" : ""}`}>
       <Starburst size={compact ? 64 : 92} color="var(--yellow)" rotate={-10}>

@@ -30,7 +30,7 @@ function RevenueBars({ days, from, to }) {
   }, [days, from, to]);
   const max = Math.max(1, ...series.map((d) => d.revenue));
   const nice = niceMax(max);
-  const W = 760, H = 240, padL = 56, padB = 28, padT = 10;
+  const W = 760, H = 260, padL = 60, padB = 30, padT = 26;
   const bw = (W - padL) / series.length;
   const ticks = [0, nice / 2, nice];
   const labelEvery = Math.ceil(series.length / 8);
@@ -56,9 +56,12 @@ function RevenueBars({ days, from, to }) {
           return (
             <g key={d.date} onMouseEnter={() => setHover(i)}>
               <rect x={padL + i * bw} y={padT} width={bw} height={H - padB - padT} fill="transparent" />
+              {h > 0 && d.revenue === max && series.length <= 31 && (
+                <text x={x + w / 2} y={y - 8} textAnchor="middle" className="bars__value">{shortINR(d.revenue)}</text>
+              )}
               {h > 0 && (
                 <path
-                  className={`bars__bar ${hover === i ? "is-hover" : ""}`}
+                  className={`bars__bar ${hover === i ? "is-hover" : ""} ${d.revenue === max ? "is-best" : ""}`}
                   d={`M${x},${H - padB} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${H - padB} Z`}
                 />
               )}
@@ -100,13 +103,13 @@ function shortINR(v) {
   return `₹${v}`;
 }
 
-function AnalyticsTile({ id, kind, title, render }) {
+function AnalyticsTile({ id, kind, title, render, soon }) {
   const q = useQuery({ queryKey: ["analytics", id, kind], queryFn: () => analyticsApi.restaurant(id, kind), staleTime: 5 * 60_000 });
   return (
-    <div className="dash-card dash-card--tile">
+    <div className="dash-card dash-card--tile" title={`GET /api/analytics/restaurants/:id/${kind}`}>
       <h3 className="display">{title}</h3>
       {q.isLoading && <Skeleton h={60} />}
-      {q.error && (q.error.status === 501 ? <ComingSoon compact title="Coming soon" text={`GET /analytics/restaurants/:id/${kind} returns 501 for now.`} /> : <ErrorState error={q.error} compact />)}
+      {q.error && (q.error.status === 501 ? <ComingSoon compact title="Cooking" text={soon} /> : <ErrorState error={q.error} compact />)}
       {q.data && render(q.data)}
     </div>
   );
@@ -222,17 +225,17 @@ export default function Dashboard() {
 
       <h2 className="display dash__more">More insights</h2>
       <div className="dash__tiles">
-        <AnalyticsTile id={id} kind="top-dishes" title="Top dishes" render={(d) => (
+        <AnalyticsTile id={id} kind="top-dishes" title="Top dishes" soon="Your best sellers, ranked by plates sold." render={(d) => (
           <ol className="mini-list">{d.dishes.map((x) => <li key={x.menuItemId}><span>{x.name}</span><b>{formatNum(x.quantitySold)} sold</b></li>)}</ol>
         )} />
-        <AnalyticsTile id={id} kind="peak-hours" title="Peak hours" render={(d) => {
+        <AnalyticsTile id={id} kind="peak-hours" title="Peak hours" soon="When the orders rush in, hour by hour." render={(d) => {
           const m = Math.max(1, ...d.hours.map((h) => h.orders));
           return <div className="mini-bars">{d.hours.map((h) => <span key={h.hour} title={`${h.hour}:00 · ${h.orders} orders`} style={{ height: `${(h.orders / m) * 100}%` }} className={h.hour === d.peakHour ? "is-peak" : ""} />)}</div>;
         }} />
-        <AnalyticsTile id={id} kind="status-breakdown" title="Order outcomes" render={(d) => (
+        <AnalyticsTile id={id} kind="status-breakdown" title="Order outcomes" soon="How many orders get delivered or cancelled." render={(d) => (
           <ul className="mini-list">{d.statuses.map((s) => <li key={s.status}><span>{s.status}</span><b>{s.percentage}%</b></li>)}</ul>
         )} />
-        <AnalyticsTile id={id} kind="ratings" title="Ratings" render={(d) => (
+        <AnalyticsTile id={id} kind="ratings" title="Ratings" soon="Your average stars and the latest reviews." render={(d) => (
           <div className="mini-rating"><b className="display">{d.averageRating?.toFixed?.(1)}</b><Stars value={Math.round(d.averageRating)} /><small>{formatNum(d.totalReviews)} reviews</small></div>
         )} />
       </div>

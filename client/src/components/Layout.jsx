@@ -87,9 +87,9 @@ function Footer() {
           <p className="hand">eat. order. repeat.</p>
         </div>
         <div className="site-footer__big display">
-          Good food
+          Good food,
           <br />
-          good mood
+          good mood.
           <Sparkle className="site-footer__sparkle" color="var(--yellow)" />
         </div>
         <div className="site-footer__cols">

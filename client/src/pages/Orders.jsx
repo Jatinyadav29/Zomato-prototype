@@ -29,6 +29,7 @@ const STEPS = ["placed", "preparing", "delivered"];
 
 function Progress({ status }) {
   if (status === "cancelled") return <div className="progress progress--cancelled">This order was cancelled by the kitchen.</div>;
+  if (status === "delivered") return null;
   const at = STEPS.indexOf(status);
   return (
     <ol className="progress" aria-label={`Status: ${STATUS_LABEL[status]}`}>
@@ -132,7 +133,7 @@ export default function Orders() {
               </Link>
               <div className="order-card__body">
                 <header>
-                  <div>
+                  <div className="order-card__title">
                     <h2 className="display">{r.name || "Restaurant"}</h2>
                     <p className="muted">{[r.area, r.city].filter(Boolean).join(", ")} · {formatDateTime(o.createdAt)}</p>
                   </div>
