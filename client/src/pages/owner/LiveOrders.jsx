@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../../api/endpoints";
-import { ACTION_LABEL, formatDateTime, formatINR, NEXT_STATUSES, PAYMENT_LABEL, STATUS_LABEL } from "../../lib/constants";
+import { ACTION_LABEL, formatDateTime, timeAgo, formatINR, NEXT_STATUSES, PAYMENT_LABEL, STATUS_LABEL } from "../../lib/constants";
 import { ErrorState, SlowLoader, Spinner } from "../../components/States";
 import { toast } from "../../components/toast";
 
@@ -23,7 +23,9 @@ function OrderTicket({ order, restaurantId }) {
     <article className={`ticket ticket--${order.status}`}>
       <header>
         <b>{order.customer?.name || "Customer"}</b>
-        <span className="ticket__time">{formatDateTime(order.createdAt)}</span>
+        <span className={`ticket__age ${Date.now() - new Date(order.createdAt) > 3600e3 ? "is-late" : ""}`} title={formatDateTime(order.createdAt)}>
+          {timeAgo(order.createdAt)}
+        </span>
       </header>
       <ul>
         {order.items.map((i, idx) => (
@@ -105,7 +107,7 @@ function History({ id }) {
         <div className={`table-wrap ${q.isFetching ? "is-dim" : ""}`}>
           <table className="table">
             <thead>
-              <tr><th>When</th><th>Customer</th><th>Items</th><th>Payment</th><th className="num">Total</th><th>Status</th><th /></tr>
+              <tr><th>When</th><th>Customer</th><th>Items</th><th>Payment</th><th className="num">Total</th><th>Status</th><th>Next step</th></tr>
             </thead>
             <tbody>
               {q.data.orders.map((o) => (
@@ -144,7 +146,7 @@ function HistoryRow({ o, id }) {
       <td><span className={`sticker sticker--${o.status}`}>{STATUS_LABEL[o.status]}</span></td>
       <td className="table__actions">
         {NEXT_STATUSES[o.status].map((s) => (
-          <button key={s} className="link-btn" disabled={m.isPending} onClick={() => m.mutate(s)}>{ACTION_LABEL[s]}</button>
+          <button key={s} className={`btn btn--sm ${s === "cancelled" ? "btn--ghost" : "btn--orange"} table__btn`} disabled={m.isPending} onClick={() => m.mutate(s)}>{ACTION_LABEL[s]}</button>
         ))}
       </td>
     </tr>

@@ -3287,3 +3287,119 @@ body {
     flex: none;
   }
 }
+
+/* ---- round 6 ---- */
+.ticket__age {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.ticket__age.is-late {
+  background: #fbd8cc;
+  color: var(--nonveg);
+}
+.pay-option {
+  min-height: 108px;
+  align-content: start;
+}
+.pay-option__icon {
+  width: 26px;
+  height: 26px;
+  margin-bottom: 6px;
+}
+.pay-note {
+  font-size: 14px;
+  background: var(--green-soft);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.auth__sub {
+  font-size: 17px;
+  color: var(--ink-2);
+  margin: -14px 0 26px;
+  max-width: 420px;
+}
+.demo-btn {
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.demo-btn--eat {
+  background: var(--yellow);
+}
+.demo-btn--cook {
+  background: var(--green);
+  color: var(--cream);
+}
+.demo-box {
+  background: var(--paper);
+}
+.finder {
+  max-width: 640px;
+}
+.finder__go {
+  background: var(--green);
+  box-shadow: none;
+  height: 56px;
+  padding: 0 28px;
+  font-size: 16px;
+}
+.finder__brand {
+  height: 56px;
+}
+.hero__lede {
+  font-size: 18px;
+}
+.bars__tick {
+  font-size: 14px;
+}
+@media (max-width: 860px) {
+  .hitters {
+    overflow: clip;
+  }
+  .hitters__burst {
+    right: 6px !important;
+  }
+  .pager .link-btn {
+    white-space: nowrap;
+  }
+  .pager {
+    flex-wrap: wrap;
+  }
+  .menu-item {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .menu-item__dots {
+    display: none;
+  }
+  .menu-item__name {
+    flex: 1;
+  }
+  .menu-poster__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+.auth__plate {
+  margin-right: 0;
+  width: min(440px, 80%);
+}
+.auth__scribble {
+  left: 40px;
+  bottom: 120px;
+}
+.dash__head p {
+  margin-top: 10px;
+}
+.table__btn {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  box-shadow: none;
+}
+.table__actions .table__btn + .table__btn {
+  margin-left: 6px;
+}

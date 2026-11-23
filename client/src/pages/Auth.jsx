@@ -6,7 +6,7 @@ import { Logo } from "../components/Layout";
 import { Checker, Scribble, Starburst } from "../components/Decor";
 import { Spinner } from "../components/States";
 
-function AuthShell({ title, kicker, children, art = "/food/biryani.jpg" }) {
+function AuthShell({ title, kicker, sub, children, art = "/food/biryani.jpg" }) {
   return (
     <div className="auth">
       <div className="auth__art">
@@ -35,6 +35,7 @@ function AuthShell({ title, kicker, children, art = "/food/biryani.jpg" }) {
         <div className="auth__form-wrap">
           <p className="hand auth__kicker">{kicker}</p>
           <h1 className="display auth__title">{title}</h1>
+          {sub && <p className="auth__sub">{sub}</p>}
           {children}
         </div>
       </div>
@@ -72,7 +73,7 @@ export function Login() {
   const demo = (email) => setForm({ email, password: "password123" });
 
   return (
-    <AuthShell title="Welcome back" kicker="hungry again?">
+    <AuthShell title="Welcome back" kicker="hungry again?" sub="Log in to order from 1,000,000 kitchens, or to run your own.">
       <form className="form" onSubmit={submit}>
         <label className="field">
           <span>Email</span>
@@ -86,10 +87,10 @@ export function Login() {
         <button className="btn btn--orange btn--block" disabled={busy}>{busy ? <><Spinner size={18} /> Logging in</> : "Log in"}</button>
       </form>
       <div className="demo-box">
-        <span>Try a demo account</span>
+        <span><b>Just looking?</b> Fill in a demo account</span>
         <div>
-          <button className="btn btn--sm btn--ghost" type="button" onClick={() => demo("customer@foodhub.com")}>Customer</button>
-          <button className="btn btn--sm btn--ghost" type="button" onClick={() => demo("owner@foodhub.com")}>Owner</button>
+          <button className="btn btn--sm demo-btn demo-btn--eat" type="button" onClick={() => demo("customer@foodhub.com")}>I'm eating</button>
+          <button className="btn btn--sm demo-btn demo-btn--cook" type="button" onClick={() => demo("owner@foodhub.com")}>I'm cooking</button>
         </div>
       </div>
       <p className="auth__switch">
@@ -124,7 +125,7 @@ export function Register() {
   };
 
   return (
-    <AuthShell title="Join FoodHub" kicker="pull up a chair" art="/food/pizza.jpg">
+    <AuthShell title="Join FoodHub" kicker="pull up a chair" sub="Eat from kitchens across 8 cities, or put yours on the map." art="/food/pizza.jpg">
       <form className="form" onSubmit={submit}>
         <div className="seg seg--big" role="radiogroup" aria-label="I want to">
           <button type="button" role="radio" aria-checked={form.role === "customer"} className={form.role === "customer" ? "is-active" : ""} onClick={() => setForm({ ...form, role: "customer" })}>I want to eat</button>

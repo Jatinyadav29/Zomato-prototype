@@ -64,6 +64,14 @@ for (const [name, s] of Object.entries(shots)) {
     await page.goto(BASE + s.url);
     await settle(page);
     if (s.wait) await page.waitForSelector(".slow-loader", { state: "detached", timeout: s.wait }).catch(() => {});
+    // scroll through so lazy images load before the full-page capture
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.body.scrollHeight; y += 500) {
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 80));
+      }
+      window.scrollTo(0, 0);
+    });
     await settle(page, 600);
     const file = path.join(out, `${name}${mobile ? "m" : ""}.png`);
     await page.screenshot({ path: file, fullPage: true });

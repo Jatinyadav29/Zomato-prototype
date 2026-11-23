@@ -76,8 +76,11 @@ export function guessCuisine(text = "") {
 }
 
 export function photoFor(restaurant, hint = "") {
-  const guessed = guessCuisine(`${restaurant?.name || ""} ${hint}`);
-  const cuisine = restaurant?.cuisines?.[0] || (CUISINE_PHOTOS[guessed] ? guessed : null) || "North Indian";
+  // Name first ("Tiffin Centre" says more than one dish in the order), then the dishes.
+  const fromName = guessCuisine(restaurant?.name || "");
+  const fromHint = guessCuisine(hint);
+  const guessed = CUISINE_PHOTOS[fromName] ? fromName : CUISINE_PHOTOS[fromHint] ? fromHint : null;
+  const cuisine = restaurant?.cuisines?.[0] || guessed || "North Indian";
   const list = CUISINE_PHOTOS[cuisine] || CUISINE_PHOTOS["North Indian"];
   // ObjectIds share long prefixes, so hash the tail for a better spread.
   const key = String(restaurant?._id || restaurant?.name || hint);
@@ -114,3 +117,13 @@ export const ACTION_LABEL = { preparing: "Start cooking", delivered: "Mark deliv
 export const PAYMENT_LABEL = { upi: "UPI", card: "Card", cod: "Cash on delivery" };
 
 export const idOf = (ref) => (ref && typeof ref === "object" ? ref._id : ref);
+
+// "12 min ago", "3 h ago", "47 days ago"
+export function timeAgo(iso) {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 90) return "just now";
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  const d = Math.round(s / 86400);
+  return `${d} day${d > 1 ? "s" : ""} ago`;
+}

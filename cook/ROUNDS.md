@@ -94,3 +94,10 @@ Round 3 critic medians (2 critics, 0-10 comp/color/type/polish/ship): S01 7.5/8/
 Data cleanup: deleted my own E2E test order 6b045f5da8dd400078a614bc and review 6b045f63a8dd400078a614bd (they showed publicly).
 Decision 21:20: footer "inconsistency" flagged by critic B was stale renders, not a bug.
 Commits: 88790d3, 82e1902. Stills r04, compare r04. Round 4 critics running.
+
+## Round 05
+Time: 21:30 to 21:38 IST
+Round 4 critic medians (comp/color/type/polish/ship): S01 8/8.25/8/7/7.25 | S02 8/8/8/6.5/7.25 | S03 6.5/8/7.5/5.75/5.75 | S04 7.25/8/7.75/7/7 | S05 7/8.75/7.75/6.5/6.75 | S06 8/8.25/8/7/7.25 | S07 7.5/7.5/7.25/6.75/6.75 | S08 7.25/8/7.5/6.5/6.5 | S01m 4/7/5/3/3 (real bug)
+Bug found by critic B: mobile hero broken + horizontal scroll, caused by round-4 desktop CSS appended after the mobile media query. Fix: final mobile override block kept LAST in pages.css; html/body overflow-x: clip. Verified by crop of r05/S01m.
+Changes: dish photo sets (beverages, breads, ice cream; +9 photos, 38 total), keyword map extended; menu manager shows "Sold out" only; live orders pinned first as full-width hero card; "Treat yourself" card (priciest available dish); closed cards keep colour; footer eyes moved; search placeholder shortened.
+Commit fecc9b3. Round 5 critics running.

@@ -11,9 +11,9 @@ import { toast } from "../components/toast";
 import { Empty, ErrorState, Spinner } from "../components/States";
 
 const PAY = [
-  { id: "upi", label: "UPI", text: "Pay with any UPI app" },
-  { id: "card", label: "Card", text: "Debit or credit card" },
-  { id: "cod", label: "Cash", text: "Pay when it arrives" },
+  { id: "upi", label: "UPI", text: "Pay with any UPI app", icon: "M7 3h10v18H7zM11 18h2" },
+  { id: "card", label: "Card", text: "Debit or credit card", icon: "M3 6h18v12H3zM3 10h18M7 15h4" },
+  { id: "cod", label: "Cash", text: "Pay when it arrives", icon: "M3 7h18v10H3zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5" },
 ];
 
 
@@ -160,12 +160,15 @@ export default function Checkout() {
             {PAY.map((p) => (
               <button key={p.id} role="radio" aria-checked={pay === p.id} className={`pay-option ${pay === p.id ? "is-active" : ""}`} onClick={() => setPay(p.id)}>
                 {pay === p.id && <span className="pay-option__check" aria-hidden="true">✓</span>}
+                <svg className="pay-option__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={p.icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>
                 <b className="display">{p.label}</b>
                 <span>{p.text}</span>
               </button>
             ))}
           </div>
-          <p className="muted small">No real payment happens here. The method is saved on the order as a label.</p>
+          <p className="pay-note">
+            <b>Heads up:</b> no real payment happens here. The method is saved on the order as a label.
+          </p>
           <Extras restaurant={cart.restaurant} />
         </div>
 
