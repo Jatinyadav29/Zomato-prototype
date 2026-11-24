@@ -1,5 +1,4 @@
-const jwt = require("jsonwebtoken");
-const env = require("../config/env");
+const { verifyAccessToken } = require("../utils/token");
 
 // Verifies the access token from the "Authorization: Bearer <token>" header.
 // The refresh token cookie is NOT used here.
@@ -13,7 +12,7 @@ function authUser(req, res, next) {
   const token = header.split(" ")[1];
 
   try {
-    const payload = jwt.verify(token, env.ACCESS_TOKEN_SECRET);
+    const payload = verifyAccessToken(token);
     req.user = { id: payload.id, role: payload.role };
     next();
   } catch (err) {

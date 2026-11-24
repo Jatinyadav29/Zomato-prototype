@@ -1,10 +1,7 @@
 const Restaurant = require("../models/restaurant.model");
 const MenuItem = require("../models/menuItem.model");
 const getPagination = require("../utils/pagination");
-const findOwnedRestaurant = require("../utils/ownership");
-const orderModel = require("../models/order.model");
-const { response } = require("express");
-const mongoose = require("mongoose");
+const Order = require("../models/order.model");
 
 // Turns lng/lat from the request body into a GeoJSON point (or null if invalid)
 function buildLocation(lng, lat) {
@@ -47,6 +44,12 @@ async function getRestaurants(req, res) {
   });
 }
 
+// [frontend fix] GET /api/restaurants/mine (owner): restaurants of the logged-in owner
+async function getMyRestaurants(req, res) {
+  const restaurants = await Restaurant.find({ owner: req.user.id }).sort({ name: 1, _id: 1 });
+  res.json({ count: restaurants.length, restaurants });
+}
+
 // GET /api/restaurants/:id
 async function getRestaurantById(req, res) {
   const restaurant = await Restaurant.findById(req.params.id).populate(
@@ -84,13 +87,7 @@ async function createRestaurant(req, res) {
 
 // PATCH /api/restaurants/:id  (owner, own restaurant only)
 async function updateRestaurant(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(
-    req.params.id,
-    req.user.id,
-  );
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
   // Only these fields can be changed
   const allowedFields = ["name", "city", "area", "cuisines", "isOpen"];
@@ -116,211 +113,62 @@ async function updateRestaurant(req, res) {
 
 // DELETE /api/restaurants/:id  (owner, own restaurant only)
 async function deleteRestaurant(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(
-    req.params.id,
-    req.user.id,
-  );
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
-  // Remove the menu too. Old orders and reviews are kept for history.
-  await MenuItem.deleteMany({ restaurant: restaurant._id });
+  // Restaurant first: if the menu cleanup then fails, the leftovers are orphaned
+  // items nobody can reach, not a live restaurant with an empty menu.
+  // Old orders and reviews are kept for history.
   await restaurant.deleteOne();
+  await MenuItem.deleteMany({ restaurant: restaurant._id });
 
   res.json({ message: "Restaurant deleted" });
 }
 
-// GET /api/restaurant/:id/revenue (owner, own resturant only)
-async function getResturantRevenue(req, res) {
-  const { id } = req.params;
-  const to = req.query.to ? new Date(req.query.to) : new Date();
-  const from = req.query.from
-    ? new Date(req.query.from)
-    : new Date(to.getTime() - 7 * 24 * 60 * 60 * 1000);
-  from.setUTCHours(0, 0, 0, 0);
+// GET /api/restaurants/top-performers  (public)
+// Ranking is the same for every visitor and the aggregation scans many orders,
+// so the result is cached for a few minutes. Concurrent requests share one query.
+const TOP_PERFORMERS_SINCE = new Date("2026-09-06T00:00:00Z");
+const TOP_PERFORMERS_TTL_MS = 5 * 60 * 1000;
+const topPerformersCache = { data: null, expiresAt: 0, pending: null };
 
-  const response = await orderModel.aggregate([
-    {
-      $match: {
-        restaurant: new mongoose.Types.ObjectId(id),
-        status: "delivered",
-        createdAt: {
-          $gte: from,
-          $lte: to,
-        },
-      },
-    },
-    {
-      $group: {
-        _id: {
-          $dateToString: {
-            format: "%Y-%m-%d",
-            date: "$createdAt",
-            timezone: "Asia/Kolkata",
-          },
-        },
-        revenue: {
-          $sum: "$totalAmount",
-        },
-      },
-    },
-    {
-      $project: {
-        date: "$_id",
-        revenue: 1,
-        _id: 0,
-      },
-    },
-    {
-      $sort: {
-        date: 1,
-      },
-    },
-    {
-      $group: {
-        _id: null,
-        totalRevenue: {
-          $sum: "$revenue",
-        },
-        days: {
-          $push: "$$ROOT",
-        },
-      },
-    },
-  ]);
-
-  const revenue =
-    response.length > 0 ? response[0] : { totalRevenue: 0, days: [] };
-
-  res.json({
-    message: "Revenue details",
-    revenue: revenue.totalRevenue,
-    from: from.toISOString().split("T")[0],
-    to: to.toISOString().split("T")[0],
-    days: revenue.days,
-  });
-}
-
-// GET /api/restaurant/:id/top-customers
-async function getTopCustomers(req, res) {
-  const { id } = req.params;
-
-  const response = await orderModel.aggregate([
-    [
-      {
-        $match: {
-          restaurant: new mongoose.Types.ObjectId("687a3bd20002000000000000"),
-          status: "delivered",
-        },
-      },
-      {
-        $group: {
-          _id: "$customer",
-          totalRevenue: {
-            $sum: "$totalAmount",
-          },
-          totalOrder: {
-            $sum: 1,
-          },
-          averageOrderValue: {
-            $avg: "$totalAmount",
-          },
-        },
-      },
-      {
-        $sort: {
-          totalRevenue: -1,
-        },
-      },
-      {
-        $limit: 3,
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "user",
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-                email: 1,
-                _id: 0,
-              },
-            },
-          ],
-        },
-      },
-      {
-        $unwind: {
-          path: "$user",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ],
-  ]);
-
-  return res.json({
-    message: "Top customers retrived successfully",
-    topCustomer: response,
-  });
-}
-
-// GET /api/restaurants/top-performers
-async function getTopPerformerReasturants(req, res) {
-  const response = await orderModel.aggregate([
-    {
-      $match: {
-        createdAt: {
-          $gte: new Date("Sun, 06 Sep 2026 00:00:00 GMT"),
-        },
-        status: "delivered",
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        status: 1,
-        totalAmount: 1,
-        restaurant: 1,
-      },
-    },
-    {
-      $group: {
-        _id: "$restaurant",
-        revenue: {
-          $sum: "$totalAmount",
-        },
-      },
-    },
-    {
-      $sort: {
-        revenue: -1,
-      },
-    },
-    {
-      $limit: 5,
-    },
+function loadTopPerformers() {
+  return Order.aggregate([
+    { $match: { status: "delivered", createdAt: { $gte: TOP_PERFORMERS_SINCE } } },
+    { $group: { _id: "$restaurant", revenue: { $sum: "$totalAmount" } } },
+    { $sort: { revenue: -1 } },
+    { $limit: 5 },
     {
       $lookup: {
         from: "restaurants",
         localField: "_id",
         foreignField: "_id",
         as: "restaurant",
+        // Public endpoint: only the fields a restaurant card shows
+        pipeline: [{ $project: { name: 1, city: 1, area: 1, cuisines: 1, isOpen: 1 } }],
       },
     },
-    {
-      $unwind: {
-        path: "$restaurant",
-      },
-    },
+    { $unwind: "$restaurant" },
+    // Revenue is used for ranking only; it is never sent to the public
+    { $project: { revenue: 0 } },
   ]);
+}
+
+async function getTopPerformers(req, res) {
+  if (!topPerformersCache.data || Date.now() >= topPerformersCache.expiresAt) {
+    topPerformersCache.pending ??= loadTopPerformers()
+      .then((data) => {
+        topPerformersCache.data = data;
+        topPerformersCache.expiresAt = Date.now() + TOP_PERFORMERS_TTL_MS;
+      })
+      .finally(() => {
+        topPerformersCache.pending = null;
+      });
+    await topPerformersCache.pending;
+  }
 
   return res.json({
-    message: "Top performing resturants fetched",
-    topPerformers: response,
+    message: "Top performing restaurants fetched",
+    topPerformers: topPerformersCache.data,
   });
 }
 
@@ -330,7 +178,6 @@ module.exports = {
   createRestaurant,
   updateRestaurant,
   deleteRestaurant,
-  getResturantRevenue,
-  getTopCustomers,
-  getTopPerformerReasturants,
+  getTopPerformers,
+  getMyRestaurants,
 };

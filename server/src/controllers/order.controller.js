@@ -5,6 +5,7 @@ const getPagination = require("../utils/pagination");
 const findOwnedRestaurant = require("../utils/ownership");
 
 const PAYMENT_METHODS = ["upi", "card", "cod"];
+const MAX_ORDER_LINES = 50;
 
 // Which status an order is allowed to move to next
 const NEXT_STATUSES = {
@@ -21,6 +22,9 @@ async function createOrder(req, res) {
 
   if (typeof restaurantId !== "string" || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "restaurantId and at least one item are required" });
+  }
+  if (items.length > MAX_ORDER_LINES) {
+    return res.status(400).json({ message: `An order can have at most ${MAX_ORDER_LINES} different items` });
   }
   if (!PAYMENT_METHODS.includes(paymentMethod)) {
     return res.status(400).json({ message: "paymentMethod must be upi, card or cod" });
@@ -97,10 +101,7 @@ async function getMyOrders(req, res) {
 
 // GET /api/restaurants/:id/orders?page=1&limit=10&status=placed  (owner)
 async function getRestaurantOrders(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(req.params.id, req.user.id);
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
   const { page, limit, skip } = getPagination(req.query);
   const filter = { restaurant: restaurant._id };
@@ -143,9 +144,18 @@ async function updateOrderStatus(req, res) {
     });
   }
 
-  order.status = status;
-  await order.save();
-  res.json({ order });
+  // Compare-and-set: only update if the status is still the one we just checked.
+  // Without this, two requests at the same time (e.g. "delivered" and "cancelled")
+  // could both pass the check above and the last write would win.
+  const updated = await Order.findOneAndUpdate(
+    { _id: order._id, status: order.status },
+    { $set: { status } },
+    { returnDocument: "after" },
+  );
+  if (!updated) {
+    return res.status(409).json({ message: "Order status was changed by someone else. Refresh and try again." });
+  }
+  res.json({ order: updated });
 }
 
 module.exports = { createOrder, getMyOrders, getRestaurantOrders, updateOrderStatus };

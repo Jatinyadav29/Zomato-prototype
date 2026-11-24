@@ -4,13 +4,15 @@ const mongoose = require("mongoose");
 // Duplicate emails are checked in the register controller instead.
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true, lowercase: true },
+    name: { type: String, required: true, trim: true, maxlength: 100 },
+    email: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ["customer", "owner"], default: "customer" },
-    city: { type: String, trim: true },
+    city: { type: String, trim: true, maxlength: 100 },
     // bcrypt hash of the user's current refresh token (null when logged out)
     refreshToken: { type: String, default: null, select: false },
+    // When the current refresh token was issued (used to detect reuse of old ones)
+    refreshTokenIssuedAt: { type: Date, default: null, select: false },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

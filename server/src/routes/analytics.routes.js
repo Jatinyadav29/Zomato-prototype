@@ -11,20 +11,19 @@ const {
   searchRestaurants,
   getNearbyRestaurants,
 } = require("../controllers/analytics.controller");
-const { authUser, authorize } = require("../middlewares/auth.middleware");
+const { authUser } = require("../middlewares/auth.middleware");
+const { ownerOfRestaurant } = require("../middlewares/ownership.middleware");
 
 // This router is mounted at /api (see app.js), so paths below are full paths.
 const router = express.Router();
 
-const ownerOnly = [authUser, authorize("owner")];
-
 // Restaurant analytics (owner dashboard)
-router.get("/analytics/restaurants/:id/revenue", ownerOnly, getRevenue);
-router.get("/analytics/restaurants/:id/top-dishes", ownerOnly, getTopDishes);
-router.get("/analytics/restaurants/:id/peak-hours", ownerOnly, getPeakHours);
-router.get("/analytics/restaurants/:id/status-breakdown", ownerOnly, getStatusBreakdown);
-router.get("/analytics/restaurants/:id/top-customers", ownerOnly, getTopCustomers);
-router.get("/analytics/restaurants/:id/ratings", ownerOnly, getRatings);
+router.get("/analytics/restaurants/:id/revenue", ownerOfRestaurant, getRevenue);
+router.get("/analytics/restaurants/:id/top-dishes", ownerOfRestaurant, getTopDishes);
+router.get("/analytics/restaurants/:id/peak-hours", ownerOfRestaurant, getPeakHours);
+router.get("/analytics/restaurants/:id/status-breakdown", ownerOfRestaurant, getStatusBreakdown);
+router.get("/analytics/restaurants/:id/top-customers", ownerOfRestaurant, getTopCustomers);
+router.get("/analytics/restaurants/:id/ratings", ownerOfRestaurant, getRatings);
 
 // Platform analytics (any logged-in user for now; there is no admin role yet)
 router.get("/analytics/platform/city-revenue", authUser, getCityRevenue);

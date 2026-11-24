@@ -1,6 +1,5 @@
 const Restaurant = require("../models/restaurant.model");
 const MenuItem = require("../models/menuItem.model");
-const findOwnedRestaurant = require("../utils/ownership");
 
 // GET /api/restaurants/:id/menu?category=Starters&isVeg=true
 async function getMenu(req, res) {
@@ -17,11 +16,7 @@ async function getMenu(req, res) {
     filter.isVeg = req.query.isVeg === "true";
   }
 
-  console.time("getMenu:menuItems");
-
   const menuItems = await MenuItem.find(filter).sort({ category: 1, name: 1 });
-
-  console.timeEnd("getMenu:menuItems");
 
   res.json({
     restaurant: { id: restaurant._id, name: restaurant.name },
@@ -33,13 +28,7 @@ async function getMenu(req, res) {
 // POST /api/restaurants/:id/menu  (owner)
 // Body: { name, category, price, isVeg, isAvailable }
 async function createMenuItem(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(
-    req.params.id,
-    req.user.id,
-  );
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
   const { name, category, price, isVeg, isAvailable } = req.body;
   const menuItem = await MenuItem.create({
@@ -56,13 +45,7 @@ async function createMenuItem(req, res) {
 
 // PATCH /api/restaurants/:id/menu/:itemId  (owner)
 async function updateMenuItem(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(
-    req.params.id,
-    req.user.id,
-  );
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
   const menuItem = await MenuItem.findOne({
     _id: req.params.itemId,
@@ -85,13 +68,7 @@ async function updateMenuItem(req, res) {
 
 // DELETE /api/restaurants/:id/menu/:itemId  (owner)
 async function deleteMenuItem(req, res) {
-  const { restaurant, error } = await findOwnedRestaurant(
-    req.params.id,
-    req.user.id,
-  );
-  if (error) {
-    return res.status(error.status).json({ message: error.message });
-  }
+  const restaurant = req.restaurant; // set by ownerOfRestaurant
 
   const menuItem = await MenuItem.findOneAndDelete({
     _id: req.params.itemId,
