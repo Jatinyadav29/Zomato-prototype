@@ -5,8 +5,11 @@ const connectDB = require("./config/db");
 const PORT = env.PORT;
 
 async function startServer() {
-  if (!env.ACCESS_TOKEN_SECRET || !env.REFRESH_TOKEN_SECRET) {
-    console.error("ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET must be set in .env");
+  const secretProblems = env.checkAuthSecrets();
+  for (const { message, fatal } of secretProblems) {
+    console[fatal ? "error" : "warn"](`${fatal ? "Error" : "Warning"}: ${message}`);
+  }
+  if (secretProblems.some((p) => p.fatal)) {
     process.exit(1);
   }
 

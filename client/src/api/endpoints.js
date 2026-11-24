@@ -15,8 +15,6 @@ export const restaurantsApi = {
   create: (body) => api("/restaurants", { method: "POST", body }),
   update: (id, body) => api(`/restaurants/${id}`, { method: "PATCH", body }),
   remove: (id) => api(`/restaurants/${id}`, { method: "DELETE" }),
-  revenue: (id, { from, to }) => api(`/restaurants/${id}/revenue`, { query: { from, to } }),
-  topCustomers: (id) => api(`/restaurants/${id}/top-customers`),
 };
 
 export const menuApi = {
@@ -39,8 +37,11 @@ export const reviewsApi = {
   forRestaurant: (id, { page = 1, limit = 6 }) => api(`/restaurants/${id}/reviews`, { query: { page, limit }, auth: false }),
 };
 
-// All of these return 501 today; the UI shows "coming soon" for them.
+// Revenue and top customers are implemented. The rest return 501 for now and
+// the UI shows "coming soon" for them.
 export const analyticsApi = {
+  revenue: (id, { from, to }) => api(`/analytics/restaurants/${id}/revenue`, { query: { from, to } }),
+  topCustomers: (id, { limit }) => api(`/analytics/restaurants/${id}/top-customers`, { query: { limit } }),
   restaurant: (id, kind) => api(`/analytics/restaurants/${id}/${kind}`),
   cityRevenue: () => api("/analytics/platform/city-revenue"),
   monthlyTrend: () => api("/analytics/platform/monthly-trend"),

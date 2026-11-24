@@ -7,9 +7,9 @@ const menuItemSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  name: { type: String, required: true, trim: true },
-  category: { type: String, trim: true, default: "Other" },
-  price: { type: Number, required: true, min: 0 },
+  name: { type: String, required: true, trim: true, maxlength: 100 },
+  category: { type: String, trim: true, default: "Other", maxlength: 50 },
+  price: { type: Number, required: true, min: 0, max: 100000 },
   isVeg: { type: Boolean, default: true },
   isAvailable: { type: Boolean, default: true },
 });

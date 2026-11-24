@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { analyticsApi, ordersApi, restaurantsApi } from "../../api/endpoints";
+import { analyticsApi, ordersApi } from "../../api/endpoints";
 import { formatDate, formatINR, formatNum, istDate } from "../../lib/constants";
 import { Scribble, Starburst, Stars } from "../../components/Decor";
 import { ErrorState, SlowLoader, Skeleton } from "../../components/States";
@@ -133,14 +133,14 @@ export default function Dashboard() {
   const anchored = to !== today;
   const rev = useQuery({
     queryKey: ["revenue", id, from, to],
-    queryFn: () => restaurantsApi.revenue(id, { from, to: to + "T23:59:59+05:30" }),
+    queryFn: () => analyticsApi.revenue(id, { from, to: to + "T23:59:59+05:30" }),
     enabled: anchor === "today" || !latest.isLoading,
   });
-  const top = useQuery({ queryKey: ["top-customers", id], queryFn: () => restaurantsApi.topCustomers(id) });
+  const top = useQuery({ queryKey: ["top-customers", id], queryFn: () => analyticsApi.topCustomers(id, { limit: 3 }) });
 
   const days = rev.data?.days || [];
   const best = days.reduce((b, d) => (!b || d.revenue > b.revenue ? d : b), null);
-  const avg = days.length ? Math.round(rev.data.revenue / range) : 0;
+  const avg = days.length ? Math.round(rev.data.totalRevenue / range) : 0;
 
   return (
     <div className="dash">
@@ -173,7 +173,7 @@ export default function Dashboard() {
       <div className="dash__stats">
         <div className="stat stat--orange">
           <span>Revenue, {range} days{anchored ? ` to ${formatDate(to + "T06:30:00Z")}` : ""}</span>
-          <b className="display">{rev.data ? formatINR(rev.data.revenue) : "…"}</b>
+          <b className="display">{rev.data ? formatINR(rev.data.totalRevenue) : "…"}</b>
         </div>
         <div className="stat stat--green">
           <span>Average per day</span>
@@ -206,17 +206,17 @@ export default function Dashboard() {
           {top.error && <ErrorState error={top.error} compact />}
           {top.data && (
             <ul className="vip-list">
-              {top.data.topCustomer.map((c) => (
-                <li key={c._id}>
-                  <span className="vip-list__avatar">{(c.user?.name || "?").slice(0, 1)}</span>
+              {top.data.customers.map((c) => (
+                <li key={c.customerId}>
+                  <span className="vip-list__avatar">{(c.name || "?").slice(0, 1)}</span>
                   <span className="vip-list__who">
-                    <b>{c.user?.name || "Unknown customer"}</b>
-                    <small>{formatNum(c.totalOrder)} orders · avg {formatINR(Math.round(c.averageOrderValue))}</small>
+                    <b>{c.name || "Unknown customer"}</b>
+                    <small>{formatNum(c.orders)} orders · avg {formatINR(Math.round(c.totalSpent / c.orders))}</small>
                   </span>
-                  <b className="vip-list__spent">{formatINR(c.totalRevenue)}</b>
+                  <b className="vip-list__spent">{formatINR(c.totalSpent)}</b>
                 </li>
               ))}
-              {!top.data.topCustomer.length && <li className="muted">No delivered orders yet.</li>}
+              {!top.data.customers.length && <li className="muted">No delivered orders yet.</li>}
             </ul>
           )}
           <Scribble arrow="down-left" className="vip-scribble">say thanks!</Scribble>

@@ -6,7 +6,7 @@ const reviewSchema = new mongoose.Schema(
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
     order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, trim: true, default: "" },
+    comment: { type: String, trim: true, default: "", maxlength: 1000 },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );

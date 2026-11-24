@@ -1,22 +1,53 @@
 // ============================================================================
-// ANALYTICS STUBS - YOUR TASKS
-// Every function below returns 501 for now. Replace the body with a MongoDB
-// aggregation pipeline (Order.aggregate([...]) / Review.aggregate / ...).
+// ANALYTICS - YOUR TASKS
+// TASK 1 (revenue) and TASK 5 (top customers) are done. Every other function
+// returns 501 for now. Replace the body with a MongoDB aggregation pipeline
+// (Order.aggregate([...]) / Review.aggregate / ...).
 //
 // Tips:
 // - Convert route ids with new mongoose.Types.ObjectId(req.params.id) inside $match.
 // - Seed data uses Indian time. Pass timezone: "Asia/Kolkata" to $hour,
 //   $dayOfWeek and $dateToString so hours and days come out right.
 // - Usually only "delivered" orders count as revenue.
-// - For restaurant analytics, check the restaurant belongs to req.user.id
-//   (see src/utils/ownership.js).
+// - Restaurant analytics routes use the ownerOfRestaurant middleware, so the
+//   owner check is already done and the restaurant is in req.restaurant
+//   (match on req.restaurant._id).
 // - Run .explain("executionStats") on your pipelines and add indexes to the
 //   models to make them fast. That is part of the task.
 // ============================================================================
 
+const Order = require("../models/order.model");
+const getPagination = require("../utils/pagination");
+
+const TIMEZONE = "Asia/Kolkata";
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_RANGE_DAYS = 30;
+const MAX_RANGE_DAYS = 366;
+
 function notImplemented(req, res) {
   res.status(501).json({ message: "Not implemented yet" });
 }
+
+// Reads ?from / ?to. Returns { from, to } or { error } with a 400 message.
+function parseDateRange(query) {
+  const to = query.to ? new Date(String(query.to)) : new Date();
+  const from = query.from
+    ? new Date(String(query.from))
+    : new Date(to.getTime() - DEFAULT_RANGE_DAYS * DAY_MS);
+  if (Number.isNaN(to.getTime()) || Number.isNaN(from.getTime())) {
+    return { error: "from and to must be valid dates (YYYY-MM-DD)" };
+  }
+  from.setUTCHours(0, 0, 0, 0);
+  if (from > to) {
+    return { error: "from must be before to" };
+  }
+  if (to - from > MAX_RANGE_DAYS * DAY_MS) {
+    return { error: `Date range can be at most ${MAX_RANGE_DAYS} days` };
+  }
+  return { from, to };
+}
+
+const toDay = (date) => date.toISOString().split("T")[0];
 
 /*
  * TASK 1: Daily revenue
@@ -43,7 +74,41 @@ function notImplemented(req, res) {
  * }
  */
 async function getRevenue(req, res) {
-  notImplemented(req, res);
+  const { from, to, error } = parseDateRange(req.query);
+  if (error) {
+    return res.status(400).json({ message: error });
+  }
+
+  const days = await Order.aggregate([
+    {
+      $match: {
+        restaurant: req.restaurant._id,
+        status: "delivered",
+        createdAt: { $gte: from, $lte: to },
+      },
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TIMEZONE } },
+        revenue: { $sum: "$totalAmount" },
+        orders: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+    { $project: { _id: 0, date: "$_id", revenue: 1, orders: 1 } },
+  ]);
+
+  // At most MAX_RANGE_DAYS rows, so the totals are cheap to add up here
+  const sum = (key) => days.reduce((total, day) => total + day[key], 0);
+
+  res.json({
+    restaurantId: req.restaurant._id,
+    from: toDay(from),
+    to: toDay(to),
+    totalRevenue: sum("revenue"),
+    totalOrders: sum("orders"),
+    days,
+  });
 }
 
 /*
@@ -118,17 +183,54 @@ async function getStatusBreakdown(req, res) {
  *
  * Top 10 customers of this restaurant by total amount spent (delivered orders).
  * Hint: $group by customer, $sort, $limit, then $lookup into users.
+ * Email is left out on purpose: an owner does not need customers' contact details.
+ *
+ * Query params:
+ *   limit  (optional) how many customers to return, default 10, max 50
  *
  * Example response:
  * {
  *   "customers": [
- *     { "customerId": "665f...aa", "name": "Aarav Sharma", "email": "aarav.sharma12@example.com", "orders": 41, "totalSpent": 23840 },
- *     { "customerId": "665f...bb", "name": "Diya Patel", "email": "diya.patel88@example.com", "orders": 37, "totalSpent": 21115 }
+ *     { "customerId": "665f...aa", "name": "Aarav Sharma", "orders": 41, "totalSpent": 23840 },
+ *     { "customerId": "665f...bb", "name": "Diya Patel", "orders": 37, "totalSpent": 21115 }
  *   ]
  * }
  */
 async function getTopCustomers(req, res) {
-  notImplemented(req, res);
+  const { limit } = getPagination(req.query);
+
+  const customers = await Order.aggregate([
+    { $match: { restaurant: req.restaurant._id, status: "delivered" } },
+    {
+      $group: {
+        _id: "$customer",
+        orders: { $sum: 1 },
+        totalSpent: { $sum: "$totalAmount" },
+      },
+    },
+    { $sort: { totalSpent: -1, _id: 1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "_id",
+        as: "user",
+        pipeline: [{ $project: { _id: 0, name: 1 } }],
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        customerId: "$_id",
+        name: { $first: "$user.name" },
+        orders: 1,
+        totalSpent: 1,
+      },
+    },
+  ]);
+
+  res.json({ customers });
 }
 
 /*

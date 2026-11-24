@@ -7,7 +7,14 @@ import "@fontsource/caveat-brush/400.css";
 import "@fontsource-variable/dm-sans";
 import "./styles/base.css";
 import "./styles/components.css";
-import "./styles/pages.css";
+// Load order matters: shared page styles first, then one file per page.
+import "./styles/pages/shared.css";
+import "./styles/pages/home.css";
+import "./styles/pages/restaurant.css";
+import "./styles/pages/checkout.css";
+import "./styles/pages/orders.css";
+import "./styles/pages/auth.css";
+import "./styles/pages/owner.css";
 import { AuthProvider } from "./auth/AuthProvider";
 import { CartProvider } from "./cart/CartContext";
 import App from "./App";

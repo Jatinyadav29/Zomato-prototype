@@ -29,5 +29,25 @@ const env = {
   SEED_END_DATE: process.env.SEED_END_DATE || "",
 };
 
+// Returns a list of problems with the JWT secrets: { message, fatal }.
+// Missing or shared secrets are always fatal. Weak or example secrets are only
+// fatal in production, so the .env.example values still work while learning.
+function checkAuthSecrets() {
+  const secrets = { ACCESS_TOKEN_SECRET: env.ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET: env.REFRESH_TOKEN_SECRET };
+  const problems = [];
+
+  for (const [name, value] of Object.entries(secrets)) {
+    if (!value) {
+      problems.push({ message: `${name} must be set in .env`, fatal: true });
+    } else if (value.length < 32 || value.includes("change-me")) {
+      problems.push({ message: `${name} is too weak (use a random string of 32+ characters)`, fatal: env.isProduction });
+    }
+  }
+  if (secrets.ACCESS_TOKEN_SECRET && secrets.ACCESS_TOKEN_SECRET === secrets.REFRESH_TOKEN_SECRET) {
+    problems.push({ message: "ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET must be different", fatal: true });
+  }
+  return problems;
+}
+
 // Freeze so no file can change a setting by accident
-module.exports = Object.freeze(env);
+module.exports = Object.freeze({ ...env, checkAuthSecrets });
